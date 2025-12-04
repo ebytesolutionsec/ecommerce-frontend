@@ -1,22 +1,22 @@
-# Proyecto E-commerce
+# E-commerce Frontend
 
-Proyecto de e-commerce con arquitectura full-stack separada en frontend y backend.
+Proyecto frontend de e-commerce desarrollado con Vue 3, Vite y Tailwind CSS.
 
 ## Estructura del proyecto
 
 ```
-proyecto-ecommerce/
-├── client/                 # Frontend (Vue + Vite + Tailwind)
+ecommerce-front/
+├── client/                 # Aplicación Vue
 │   ├── src/
+│   │   ├── components/
+│   │   ├── App.vue
+│   │   ├── main.js
+│   │   └── style.css
 │   ├── public/
-│   └── package.json
-├── server/                 # Backend (Node + Express)
-│   ├── routes/
-│   ├── controllers/
-│   ├── models/
-│   ├── middleware/
-│   ├── config/
-│   ├── index.js
+│   ├── index.html
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── vite.config.js
 │   └── package.json
 ├── package.json           # Scripts raíz
 └── README.md
@@ -24,58 +24,45 @@ proyecto-ecommerce/
 
 ## Tecnologías
 
-### Frontend
-- Vue 3
-- Vite
-- Tailwind CSS
-
-### Backend
-- Node.js
-- Express
-- CORS
-- Dotenv
+- **Vue 3** - Framework progresivo de JavaScript
+- **Vite** - Build tool y dev server ultra rápido
+- **Tailwind CSS v4** - Framework de CSS utility-first
+- **PostCSS** - Procesador de CSS
 
 ## Instalación
 
-### Instalar todas las dependencias
+Instalar todas las dependencias:
 ```bash
-npm run install:all
-```
-
-### O instalar por separado
-```bash
-npm run install:client
-npm run install:server
+npm install
 ```
 
 ## Desarrollo
 
-### Ejecutar el frontend
+Ejecutar el servidor de desarrollo:
 ```bash
-npm run dev:client
+npm run dev
 ```
-El frontend estará disponible en `http://localhost:5173`
 
-### Ejecutar el backend
-```bash
-npm run dev:server
-```
-El backend estará disponible en `http://localhost:3000`
-
-## Configuración
-
-### Backend
-1. Copia el archivo `.env.example` a `.env` en la carpeta `server/`
-2. Configura las variables de entorno según tus necesidades
+La aplicación estará disponible en `http://localhost:5173`
 
 ## Build
 
-### Build del frontend
+Crear build de producción:
 ```bash
-npm run build:client
+npm run build
 ```
 
-### Ejecutar el servidor en producción
+Los archivos compilados estarán en `client/dist/`
+
+## Preview
+
+Previsualizar el build de producción:
 ```bash
-npm run start:server
+npm run preview
 ```
+
+## Configuración de Tailwind CSS
+
+Este proyecto usa Tailwind CSS v4 con la nueva sintaxis:
+- El plugin de PostCSS es `@tailwindcss/postcss`
+- Los estilos se importan con `@import "tailwindcss"` en lugar de directivas `@tailwind`
