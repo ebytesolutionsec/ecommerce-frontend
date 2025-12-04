@@ -1,18 +1,15 @@
 {
-  "name": "proyecto-ecommerce",
+  "name": "ecommerce-front",
   "version": "1.0.0",
-  "description": "E-commerce project with Vue + Vite frontend and Node backend",
+  "description": "E-commerce frontend project with Vue + Vite and Tailwind CSS",
   "private": true,
   "scripts": {
-    "install:client": "cd client && npm install",
-    "install:server": "cd server && npm install",
-    "install:all": "npm run install:client && npm run install:server",
-    "dev:client": "cd client && npm run dev",
-    "dev:server": "cd server && npm run dev",
-    "build:client": "cd client && npm run build",
-    "start:server": "cd server && npm start"
+    "install": "cd client && npm install",
+    "dev": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "preview": "cd client && npm run preview"
   },
-  "keywords": ["ecommerce", "vue", "vite", "node", "express"],
+  "keywords": ["ecommerce", "vue", "vite", "tailwind", "frontend"],
   "author": "",
   "license": "ISC"
 }
