@@ -1,13 +1,14 @@
 # Dependencies
 node_modules/
 client/node_modules/
-server/node_modules/
+
+# Backend repository (separate git repo)
+server/
 
 # Environment variables
 .env
 .env.local
 .env.*.local
-server/.env
 
 # Logs
 logs

@@ -19,26 +19,36 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DNI</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-if="paginatedUsers.length === 0">
-              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+            <tr v-if="loading">
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                <div class="flex justify-center items-center">
+                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a3195b]"></div>
+                  <span class="ml-3">Cargando usuarios...</span>
+                </div>
+              </td>
+            </tr>
+            <tr v-else-if="paginatedUsers.length === 0">
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                 No hay usuarios registrados
               </td>
             </tr>
-            <tr v-for="user in paginatedUsers" :key="user.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.id }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.nombre }}</td>
+            <tr v-else v-for="user in paginatedUsers" :key="user._id" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.dni }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.fullName }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.email }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.phone }}</td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 py-1 text-xs rounded-full" :class="user.rol === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'">
-                  {{ user.rol }}
+                <span class="px-2 py-1 text-xs rounded-full" :class="user.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'">
+                  {{ user.role === 'superadmin' ? 'Super Admin' : 'Comprador' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
@@ -60,10 +70,10 @@
 
       <!-- Paginación -->
       <Pagination
-        v-if="usuarios.length > 0"
+        v-if="total > 0"
         :current-page="currentPage"
         :total-pages="totalPages"
-        :total="usuarios.length"
+        :total="total"
         :per-page="perPage"
         @page-change="changePage"
       />
@@ -93,45 +103,66 @@
       @close="showDeleteModal = false"
       @confirm="deleteUser"
     >
-      <p class="text-gray-600">¿Estás seguro que deseas eliminar al usuario <strong>{{ userToDelete?.nombre }}</strong>?</p>
+      <p class="text-gray-600">¿Estás seguro que deseas eliminar al usuario <strong>{{ userToDelete?.fullName }}</strong>?</p>
       <p class="text-sm text-red-600 mt-2">Esta acción no se puede deshacer.</p>
     </Modal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Modal from '../../components/common/Modal.vue'
 import UserForm from '../../components/users/UserForm.vue'
 import Pagination from '../../components/common/Pagination.vue'
+import userService from '../../services/userService.js'
 
 // Estado
-const usuarios = ref([
-  { id: 1, nombre: 'Admin Usuario', email: 'admin@gmail.com', rol: 'admin' },
-  { id: 2, nombre: 'Juan Pérez', email: 'juan@ejemplo.com', rol: 'usuario' },
-  { id: 3, nombre: 'María García', email: 'maria@ejemplo.com', rol: 'usuario' }
-])
-
+const usuarios = ref([])
 const showModal = ref(false)
 const showDeleteModal = ref(false)
 const isEdit = ref(false)
 const selectedUser = ref(null)
 const userToDelete = ref(null)
 const userFormRef = ref(null)
+const loading = ref(false)
+const errorMessage = ref('')
 
 // Paginación
 const currentPage = ref(1)
 const perPage = ref(10)
-const totalPages = computed(() => Math.ceil(usuarios.value.length / perPage.value))
-const paginatedUsers = computed(() => {
-  const start = (currentPage.value - 1) * perPage.value
-  const end = start + perPage.value
-  return usuarios.value.slice(start, end)
-})
+const total = ref(0)
+const totalPages = computed(() => Math.ceil(total.value / perPage.value))
+const paginatedUsers = computed(() => usuarios.value)
+
+// Cargar usuarios desde el backend
+const loadUsers = async () => {
+  try {
+    loading.value = true
+    errorMessage.value = ''
+    const response = await userService.list(currentPage.value, perPage.value)
+
+    // El backend retorna { data, total, limit, page, totalPages }
+    usuarios.value = response.data || []
+    total.value = response.total || 0
+
+    console.log('Usuarios cargados:', usuarios.value.length, 'Total:', total.value)
+  } catch (error) {
+    console.error('Error al cargar usuarios:', error)
+    errorMessage.value = error.message || 'Error al cargar los usuarios'
+  } finally {
+    loading.value = false
+  }
+}
 
 const changePage = (page) => {
   currentPage.value = page
+  loadUsers()
 }
+
+// Cargar usuarios al montar el componente
+onMounted(() => {
+  loadUsers()
+})
 
 // CRUD Operations
 const openCreateModal = () => {
@@ -157,39 +188,26 @@ const submitForm = () => {
 
 const handleSubmit = async (formData) => {
   try {
+    loading.value = true
+    errorMessage.value = ''
+
     if (isEdit.value) {
-      // Aquí irá la llamada al API para actualizar
-      // await fetch(`/api/usuarios/${selectedUser.value.id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // })
-
-      // Simulación - actualizar localmente
-      const index = usuarios.value.findIndex(u => u.id === selectedUser.value.id)
-      if (index !== -1) {
-        usuarios.value[index] = { ...usuarios.value[index], ...formData }
-      }
+      // Actualizar usuario existente
+      await userService.update(selectedUser.value._id, formData)
     } else {
-      // Aquí irá la llamada al API para crear
-      // const response = await fetch('/api/usuarios', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // })
-      // const newUser = await response.json()
-
-      // Simulación - agregar localmente
-      const newUser = {
-        id: usuarios.value.length + 1,
-        ...formData
-      }
-      usuarios.value.push(newUser)
+      // Crear nuevo usuario
+      await userService.create(formData)
     }
 
     closeModal()
+    // Recargar la lista de usuarios
+    await loadUsers()
   } catch (error) {
     console.error('Error al guardar usuario:', error)
+    errorMessage.value = error.message || 'Error al guardar el usuario'
+    alert(errorMessage.value)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -200,18 +218,23 @@ const confirmDelete = (user) => {
 
 const deleteUser = async () => {
   try {
-    // Aquí irá la llamada al API para eliminar
-    // await fetch(`/api/usuarios/${userToDelete.value.id}`, {
-    //   method: 'DELETE'
-    // })
+    loading.value = true
+    errorMessage.value = ''
 
-    // Simulación - eliminar localmente
-    usuarios.value = usuarios.value.filter(u => u.id !== userToDelete.value.id)
+    // Eliminar usuario del backend
+    await userService.delete(userToDelete.value._id)
 
     showDeleteModal.value = false
     userToDelete.value = null
+
+    // Recargar la lista de usuarios
+    await loadUsers()
   } catch (error) {
     console.error('Error al eliminar usuario:', error)
+    errorMessage.value = error.message || 'Error al eliminar el usuario'
+    alert(errorMessage.value)
+  } finally {
+    loading.value = false
   }
 }
 </script>
