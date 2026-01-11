@@ -24,12 +24,11 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="loading">
-              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                 <div class="flex justify-center items-center">
                   <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a3195b]"></div>
                   <span class="ml-3">Cargando usuarios...</span>
@@ -37,7 +36,7 @@
               </td>
             </tr>
             <tr v-else-if="paginatedUsers.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                 No hay usuarios registrados
               </td>
             </tr>
@@ -50,18 +49,6 @@
                 <span class="px-2 py-1 text-xs rounded-full" :class="user.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'">
                   {{ user.role === 'superadmin' ? 'Super Admin' : 'Comprador' }}
                 </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                <button @click="openEditModal(user)" class="text-[#a3195b] hover:text-[#8a1450]">
-                  <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-                <button @click="confirmDelete(user)" class="text-[#e2312d] hover:text-red-700">
-                  <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
               </td>
             </tr>
           </tbody>
@@ -115,6 +102,9 @@ import Modal from '../../components/common/Modal.vue'
 import UserForm from '../../components/users/UserForm.vue'
 import Pagination from '../../components/common/Pagination.vue'
 import userService from '../../services/userService.js'
+import { useToast } from '../../composables/useToast.js'
+
+const { success, error: showError } = useToast()
 
 // Estado
 const usuarios = ref([])
@@ -194,9 +184,11 @@ const handleSubmit = async (formData) => {
     if (isEdit.value) {
       // Actualizar usuario existente
       await userService.update(selectedUser.value._id, formData)
+      success('Usuario actualizado exitosamente', 'Los cambios han sido guardados correctamente')
     } else {
       // Crear nuevo usuario
       await userService.create(formData)
+      success('Usuario creado exitosamente', 'El usuario ha sido agregado correctamente')
     }
 
     closeModal()
@@ -205,7 +197,7 @@ const handleSubmit = async (formData) => {
   } catch (error) {
     console.error('Error al guardar usuario:', error)
     errorMessage.value = error.message || 'Error al guardar el usuario'
-    alert(errorMessage.value)
+    showError('Error al guardar el usuario', errorMessage.value)
   } finally {
     loading.value = false
   }
@@ -224,6 +216,7 @@ const deleteUser = async () => {
     // Eliminar usuario del backend
     await userService.delete(userToDelete.value._id)
 
+    success('Usuario eliminado exitosamente', 'El usuario ha sido eliminado correctamente')
     showDeleteModal.value = false
     userToDelete.value = null
 
@@ -232,7 +225,7 @@ const deleteUser = async () => {
   } catch (error) {
     console.error('Error al eliminar usuario:', error)
     errorMessage.value = error.message || 'Error al eliminar el usuario'
-    alert(errorMessage.value)
+    showError('Error al eliminar el usuario', errorMessage.value)
   } finally {
     loading.value = false
   }
