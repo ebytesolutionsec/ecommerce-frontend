@@ -94,13 +94,13 @@ const LogoutIcon = {
 }
 
 const menuItems = [
-  { name: 'Inicio', label: 'Inicio', icon: HomeIcon, path: '/dashboard' },
-  { name: 'Usuarios', label: 'Usuarios', icon: UsersIcon, path: '/dashboard/usuarios' },
-  { name: 'Ordenes', label: 'Ordenes', icon: OrdersIcon, path: '/dashboard/ordenes' },
-  { name: 'Pagos', label: 'Pagos', icon: PaymentsIcon, path: '/dashboard/pagos' },
-  { name: 'Productos', label: 'Productos', icon: ProductsIcon, path: '/dashboard/productos' },
-  { name: 'Categorias', label: 'Categorías', icon: CategoriesIcon, path: '/dashboard/categorias' },
-  { name: 'Inventario', label: 'Inventario', icon: InventoryIcon, path: '/dashboard/inventario' }
+  { name: 'Inicio', label: 'Inicio', icon: HomeIcon, path: '/admin' },
+  { name: 'Usuarios', label: 'Usuarios', icon: UsersIcon, path: '/admin/usuarios' },
+  { name: 'Ordenes', label: 'Ordenes', icon: OrdersIcon, path: '/admin/ordenes' },
+  { name: 'Pagos', label: 'Pagos', icon: PaymentsIcon, path: '/admin/pagos' },
+  { name: 'Productos', label: 'Productos', icon: ProductsIcon, path: '/admin/productos' },
+  { name: 'Categorias', label: 'Categorías', icon: CategoriesIcon, path: '/admin/categorias' },
+  { name: 'Inventario', label: 'Inventario', icon: InventoryIcon, path: '/admin/inventario' }
 ]
 
 const handleItemClick = (item) => {
