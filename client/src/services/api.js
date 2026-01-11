@@ -1,8 +1,35 @@
 // Configuración base de la API
 const API_BASE_URL = 'http://localhost:3000/api/v1'
 
+// Obtener token del localStorage
+const getAuthToken = () => {
+  return localStorage.getItem('auth_token')
+}
+
+// Obtener headers con autenticación
+const getHeaders = () => {
+  const headers = {
+    'Content-Type': 'application/json',
+  }
+
+  const token = getAuthToken()
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  return headers
+}
+
 // Función helper para manejar respuestas
 const handleResponse = async (response) => {
+  // Si el token es inválido o expiró, redirigir al login
+  if (response.status === 401 || response.status === 403) {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('isAuthenticated')
+    window.location.href = '/login'
+    throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.')
+  }
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Error en la petición' }))
     throw new Error(error.message || 'Error en la petición')
@@ -13,16 +40,16 @@ const handleResponse = async (response) => {
 // Métodos HTTP genéricos
 export const api = {
   get: async (endpoint) => {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`)
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: getHeaders(),
+    })
     return handleResponse(response)
   },
 
   post: async (endpoint, data) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getHeaders(),
       body: JSON.stringify(data),
     })
     return handleResponse(response)
@@ -31,9 +58,7 @@ export const api = {
   patch: async (endpoint, data) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getHeaders(),
       body: JSON.stringify(data),
     })
     return handleResponse(response)
@@ -42,8 +67,44 @@ export const api = {
   delete: async (endpoint) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
+      headers: getHeaders(),
     })
     return handleResponse(response)
+  },
+
+  // Método especial para enviar FormData (archivos)
+  postFormData: async (endpoint, formData) => {
+    const token = getAuthToken()
+    const headers = {}
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    // No establecer Content-Type, el navegador lo hará automáticamente con el boundary correcto
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: headers,
+      body: formData,
+    })
+    return handleResponse(response)
+  },
+
+  // Método público (sin autenticación) para endpoints públicos
+  getPublic: async (endpoint) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    // Para endpoints públicos, no redirigir al login en caso de error
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Error en la petición' }))
+      throw new Error(error.message || 'Error en la petición')
+    }
+
+    return response.json()
   },
 }
 

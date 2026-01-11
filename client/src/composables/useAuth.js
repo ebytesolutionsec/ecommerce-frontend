@@ -10,12 +10,16 @@ export const useAuth = () => {
 
   const logout = () => {
     isAuthenticated.value = false
+    // Remover token y estado de autenticación
     localStorage.removeItem('isAuthenticated')
+    localStorage.removeItem('auth_token')
   }
 
   const checkAuth = () => {
+    // Verificar si existe el token y el estado de autenticación
     const authStatus = localStorage.getItem('isAuthenticated')
-    isAuthenticated.value = authStatus === 'true'
+    const token = localStorage.getItem('auth_token')
+    isAuthenticated.value = authStatus === 'true' && !!token
     return isAuthenticated.value
   }
 

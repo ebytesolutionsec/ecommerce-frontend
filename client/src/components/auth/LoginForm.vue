@@ -68,17 +68,12 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { validateEmailFormat, validatePasswordSecurity } from '../../utils/validators'
+import { validateEmailFormat } from '../../utils/validators'
 import { useAuth } from '../../composables/useAuth'
+import authService from '../../services/authService'
 
 const emit = defineEmits(['login-success'])
 const { login } = useAuth()
-
-// Usuario estático para pruebas
-const STATIC_USER = {
-  email: 'admin@gmail.com',
-  password: 'Admin123'
-}
 
 const form = reactive({
   email: '',
@@ -112,15 +107,11 @@ const validatePassword = () => {
     errors.password = 'La contraseña es requerida'
     return false
   }
-  if (!validatePasswordSecurity(form.password)) {
-    errors.password = 'La contraseña debe tener al menos 6 caracteres, una mayúscula y un número'
-    return false
-  }
   errors.password = ''
   return true
 }
 
-// Submit del formulario
+// Submit del formulario - Autenticación con el backend
 const handleSubmit = async () => {
   const isEmailValid = validateEmail()
   const isPasswordValid = validatePassword()
@@ -131,37 +122,21 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    // Simulación de delay
-    await new Promise(resolve => setTimeout(resolve, 800))
+    // Llamada al backend para autenticación
+    const response = await authService.login(form.email, form.password)
 
-    // Validación con usuario estático (remover cuando se conecte al backend)
-    if (form.email === STATIC_USER.email && form.password === STATIC_USER.password) {
-      login() // Marcar como autenticado
-      emit('login-success')
-      return
-    }
+    // Guardar token en localStorage
+    authService.setToken(response.token)
 
-    // Aquí irá la llamada al API del backend para validar contra la BD
-    // const response = await fetch('/api/auth/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email: form.email, password: form.password })
-    // })
-    //
-    // if (!response.ok) {
-    //   errors.credentials = 'Usuario o contraseña incorrectos'
-    //   return
-    // }
-    //
-    // const data = await response.json()
-    // // Guardar token si es necesario: localStorage.setItem('token', data.token)
-    // emit('login-success')
+    // Marcar como autenticado en el composable
+    login()
 
-    // Si no es el usuario estático y no hay backend, mostrar error
-    errors.credentials = 'Usuario o contraseña incorrectos'
+    // Emitir evento de login exitoso
+    emit('login-success')
   } catch (error) {
     console.error('Error en login:', error)
-    errors.credentials = 'Error al intentar iniciar sesión'
+    // Mostrar el mensaje de error del backend
+    errors.credentials = error.message || 'Usuario o contraseña incorrectos'
   } finally {
     isSubmitting.value = false
   }

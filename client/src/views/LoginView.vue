@@ -46,7 +46,7 @@ import LoginForm from '../components/auth/LoginForm.vue'
 const router = useRouter()
 
 const handleLoginSuccess = () => {
-  router.push('/dashboard')
+  router.push('/admin')
 }
 </script>
 
