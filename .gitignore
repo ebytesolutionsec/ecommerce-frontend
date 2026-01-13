@@ -43,3 +43,6 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
+.claude/
+*.usuarios.json
+nul
