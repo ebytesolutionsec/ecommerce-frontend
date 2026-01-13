@@ -20,36 +20,36 @@
 
         <!-- Formulario de Registro -->
         <form @submit.prevent="handleSubmit" class="space-y-4">
-          <!-- Nombre -->
+          <!-- DNI -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Nombre <span class="text-red-500">*</span>
+              DNI / Cédula <span class="text-red-500">*</span>
             </label>
             <input
-              v-model="formData.nombre"
+              v-model="formData.dni"
               type="text"
               required
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
-              :class="{ 'border-red-500': errors.nombre }"
-              placeholder="Juan"
+              :class="{ 'border-red-500': errors.dni }"
+              placeholder="1234567890"
             />
-            <span v-if="errors.nombre" class="text-red-500 text-sm">{{ errors.nombre }}</span>
+            <span v-if="errors.dni" class="text-red-500 text-sm">{{ errors.dni }}</span>
           </div>
 
-          <!-- Apellido -->
+          <!-- Nombre Completo -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Apellido <span class="text-red-500">*</span>
+              Nombre Completo <span class="text-red-500">*</span>
             </label>
             <input
-              v-model="formData.apellido"
+              v-model="formData.fullName"
               type="text"
               required
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
-              :class="{ 'border-red-500': errors.apellido }"
-              placeholder="Pérez"
+              :class="{ 'border-red-500': errors.fullName }"
+              placeholder="Juan Pérez García"
             />
-            <span v-if="errors.apellido" class="text-red-500 text-sm">{{ errors.apellido }}</span>
+            <span v-if="errors.fullName" class="text-red-500 text-sm">{{ errors.fullName }}</span>
           </div>
 
           <!-- Correo -->
@@ -58,27 +58,46 @@
               Correo Electrónico <span class="text-red-500">*</span>
             </label>
             <input
-              v-model="formData.correo"
+              v-model="formData.email"
               type="email"
               required
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
-              :class="{ 'border-red-500': errors.correo }"
+              :class="{ 'border-red-500': errors.email }"
               placeholder="juan@ejemplo.com"
             />
-            <span v-if="errors.correo" class="text-red-500 text-sm">{{ errors.correo }}</span>
+            <span v-if="errors.email" class="text-red-500 text-sm">{{ errors.email }}</span>
           </div>
 
           <!-- Teléfono -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Teléfono
+              Teléfono <span class="text-red-500">*</span>
             </label>
             <input
-              v-model="formData.telefono"
+              v-model="formData.phone"
               type="tel"
+              required
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
-              placeholder="+1 234 567 890"
+              :class="{ 'border-red-500': errors.phone }"
+              placeholder="0999999999"
             />
+            <span v-if="errors.phone" class="text-red-500 text-sm">{{ errors.phone }}</span>
+          </div>
+
+          <!-- Dirección -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Dirección <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="formData.direccion"
+              type="text"
+              required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
+              :class="{ 'border-red-500': errors.direccion }"
+              placeholder="Loja, Ecuador"
+            />
+            <span v-if="errors.direccion" class="text-red-500 text-sm">{{ errors.direccion }}</span>
           </div>
 
           <!-- Contraseña -->
@@ -88,11 +107,11 @@
             </label>
             <div class="relative">
               <input
-                v-model="formData.contrasena"
+                v-model="formData.password"
                 :type="showPassword ? 'text' : 'password'"
                 required
                 class="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
-                :class="{ 'border-red-500': errors.contrasena }"
+                :class="{ 'border-red-500': errors.password }"
                 placeholder="••••••••"
               />
               <button
@@ -109,7 +128,7 @@
                 </svg>
               </button>
             </div>
-            <span v-if="errors.contrasena" class="text-red-500 text-sm">{{ errors.contrasena }}</span>
+            <span v-if="errors.password" class="text-red-500 text-sm">{{ errors.password }}</span>
             <p class="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
           </div>
 
@@ -119,14 +138,14 @@
               Confirmar Contraseña <span class="text-red-500">*</span>
             </label>
             <input
-              v-model="formData.confirmarContrasena"
+              v-model="formData.confirmarPassword"
               :type="showPassword ? 'text' : 'password'"
               required
               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
-              :class="{ 'border-red-500': errors.confirmarContrasena }"
+              :class="{ 'border-red-500': errors.confirmarPassword }"
               placeholder="••••••••"
             />
-            <span v-if="errors.confirmarContrasena" class="text-red-500 text-sm">{{ errors.confirmarContrasena }}</span>
+            <span v-if="errors.confirmarPassword" class="text-red-500 text-sm">{{ errors.confirmarPassword }}</span>
           </div>
 
           <!-- Términos y Condiciones -->
@@ -195,6 +214,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '../../composables/useToast.js'
+import { authService } from '../../services/authService.js'
 
 const router = useRouter()
 const { success, error: showError } = useToast()
@@ -203,13 +223,13 @@ const { success, error: showError } = useToast()
 const loading = ref(false)
 const showPassword = ref(false)
 const formData = ref({
-  nombre: '',
-  apellido: '',
-  correo: '',
-  telefono: '',
-  contrasena: '',
-  confirmarContrasena: '',
-  rol: 'comprador',
+  dni: '',
+  fullName: '',
+  email: '',
+  phone: '',
+  direccion: '',
+  password: '',
+  confirmarPassword: '',
   aceptaTerminos: false
 })
 
@@ -219,28 +239,38 @@ const errors = ref({})
 const validateForm = () => {
   errors.value = {}
 
-  if (!formData.value.nombre.trim()) {
-    errors.value.nombre = 'El nombre es requerido'
+  if (!formData.value.dni.trim()) {
+    errors.value.dni = 'El DNI es requerido'
+  } else if (formData.value.dni.length < 8) {
+    errors.value.dni = 'El DNI debe tener al menos 8 caracteres'
   }
 
-  if (!formData.value.apellido.trim()) {
-    errors.value.apellido = 'El apellido es requerido'
+  if (!formData.value.fullName.trim()) {
+    errors.value.fullName = 'El nombre completo es requerido'
   }
 
-  if (!formData.value.correo.trim()) {
-    errors.value.correo = 'El correo es requerido'
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.correo)) {
-    errors.value.correo = 'El correo no es válido'
+  if (!formData.value.email.trim()) {
+    errors.value.email = 'El correo es requerido'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email)) {
+    errors.value.email = 'El correo no es válido'
   }
 
-  if (!formData.value.contrasena) {
-    errors.value.contrasena = 'La contraseña es requerida'
-  } else if (formData.value.contrasena.length < 6) {
-    errors.value.contrasena = 'La contraseña debe tener al menos 6 caracteres'
+  if (!formData.value.phone.trim()) {
+    errors.value.phone = 'El teléfono es requerido'
   }
 
-  if (formData.value.contrasena !== formData.value.confirmarContrasena) {
-    errors.value.confirmarContrasena = 'Las contraseñas no coinciden'
+  if (!formData.value.direccion.trim()) {
+    errors.value.direccion = 'La dirección es requerida'
+  }
+
+  if (!formData.value.password) {
+    errors.value.password = 'La contraseña es requerida'
+  } else if (formData.value.password.length < 6) {
+    errors.value.password = 'La contraseña debe tener al menos 6 caracteres'
+  }
+
+  if (formData.value.password !== formData.value.confirmarPassword) {
+    errors.value.confirmarPassword = 'Las contraseñas no coinciden'
   }
 
   if (!formData.value.aceptaTerminos) {
@@ -258,18 +288,25 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    // TODO: Conectar con el backend cuando esté disponible
-    // const response = await userService.register(formData.value)
-
-    // Simulación
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Registrar usuario usando el servicio de autenticación
+    await authService.register({
+      dni: formData.value.dni,
+      fullName: formData.value.fullName,
+      email: formData.value.email,
+      phone: formData.value.phone,
+      direccion: formData.value.direccion,
+      password: formData.value.password
+    })
 
     success(
       'Cuenta creada exitosamente',
       'Tu cuenta ha sido creada. Ya puedes iniciar sesión'
     )
 
-    router.push('/login')
+    // Redirigir al login después de 1 segundo
+    setTimeout(() => {
+      router.push('/login')
+    }, 1000)
   } catch (error) {
     console.error('Error al crear cuenta:', error)
     showError(

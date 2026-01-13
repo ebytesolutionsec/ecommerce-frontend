@@ -101,6 +101,13 @@
                 >
                   Iniciar Sesión
                 </router-link>
+                <router-link
+                  to="/registro"
+                  @click="closeAccountDropdown"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
+                >
+                  Crear Cuenta
+                </router-link>
               </div>
             </transition>
           </div>
