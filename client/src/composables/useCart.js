@@ -39,7 +39,18 @@ export function useCart() {
 
   // Methods
   const addToCart = (product, quantity = 1) => {
-    const existingItem = cartItems.value.find(item => item._id === product._id || item.id === product.id)
+    // Obtener el ID del producto (puede ser _id o id)
+    const productId = product._id || product.id
+
+    if (!productId) {
+      console.error('Producto sin ID válido:', product)
+      return
+    }
+
+    const existingItem = cartItems.value.find(item => {
+      const itemId = item._id || item.id
+      return itemId && itemId === productId
+    })
 
     if (existingItem) {
       existingItem.quantity += quantity
@@ -55,7 +66,10 @@ export function useCart() {
   }
 
   const removeFromCart = (productId) => {
-    const index = cartItems.value.findIndex(item => item._id === productId || item.id === productId)
+    const index = cartItems.value.findIndex(item => {
+      const itemId = item._id || item.id
+      return itemId && itemId === productId
+    })
     if (index > -1) {
       cartItems.value.splice(index, 1)
       saveCartToStorage()
@@ -63,7 +77,11 @@ export function useCart() {
   }
 
   const updateQuantity = (productId, quantity) => {
-    const item = cartItems.value.find(item => item._id === productId || item.id === productId)
+    const item = cartItems.value.find(item => {
+      const itemId = item._id || item.id
+      return itemId && itemId === productId
+    })
+
     if (item) {
       if (quantity <= 0) {
         removeFromCart(productId)
@@ -80,11 +98,17 @@ export function useCart() {
   }
 
   const isInCart = (productId) => {
-    return cartItems.value.some(item => item._id === productId || item.id === productId)
+    return cartItems.value.some(item => {
+      const itemId = item._id || item.id
+      return itemId && itemId === productId
+    })
   }
 
   const getItemQuantity = (productId) => {
-    const item = cartItems.value.find(item => item._id === productId || item.id === productId)
+    const item = cartItems.value.find(item => {
+      const itemId = item._id || item.id
+      return itemId && itemId === productId
+    })
     return item ? item.quantity : 0
   }
 
