@@ -32,17 +32,14 @@ export const categoryService = {
     return api.delete(`/categoria/delete/${id}`)
   },
 
-  // ========== ENDPOINTS PÚBLICOS (intento sin autenticación) ==========
+  // ========== ENDPOINTS PÚBLICOS (sin autenticación) ==========
 
   // Listar categorías públicamente (para la tienda)
-  // Nota: El backend aún requiere token, pero intentamos sin él primero
   listPublic: async () => {
     try {
-      // Intentar obtener categorías sin autenticación
-      return await api.getPublic('/categoria/list?limit=100')
+      return await api.getPublic('/categoria/list/public?limit=100')
     } catch (error) {
-      // Si falla, retornar array vacío o usar categorías mock
-      console.warn('No se pudieron cargar categorías desde el backend:', error)
+      console.error('Error al cargar categorías:', error)
       return { data: [] }
     }
   },

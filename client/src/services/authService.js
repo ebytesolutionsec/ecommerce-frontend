@@ -9,6 +9,19 @@ export const authService = {
     return response
   },
 
+  // Registro de usuario comprador (público)
+  register: async (userData) => {
+    const response = await api.postPublic('/usuario/create/comprador', {
+      dni: userData.dni,
+      fullName: userData.fullName,
+      email: userData.email,
+      direccion: userData.direccion,
+      phone: userData.phone,
+      password: userData.password
+    })
+    return response
+  },
+
   // Guardar token en localStorage
   setToken: (token) => {
     localStorage.setItem('auth_token', token)

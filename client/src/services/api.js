@@ -90,12 +90,31 @@ export const api = {
     return handleResponse(response)
   },
 
-  // Método público (sin autenticación) para endpoints públicos
+  // Método público (sin autenticación) para endpoints públicos GET
   getPublic: async (endpoint) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
       },
+    })
+
+    // Para endpoints públicos, no redirigir al login en caso de error
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Error en la petición' }))
+      throw new Error(error.message || 'Error en la petición')
+    }
+
+    return response.json()
+  },
+
+  // Método público (sin autenticación) para endpoints públicos POST
+  postPublic: async (endpoint, data) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
     })
 
     // Para endpoints públicos, no redirigir al login en caso de error
