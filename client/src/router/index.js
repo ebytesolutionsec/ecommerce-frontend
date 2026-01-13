@@ -4,21 +4,35 @@ import authService from '../services/authService'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // Rutas del Shop (con layout compartido)
     {
       path: '/',
-      name: 'home',
-      component: () => import('../views/shop/HomeView.vue')
+      component: () => import('../layouts/ShopLayout.vue'),
+      children: [
+        {
+          path: '',
+          name: 'home',
+          component: () => import('../views/shop/HomeView.vue')
+        },
+        {
+          path: 'producto/:id',
+          name: 'producto-detalle',
+          component: () => import('../views/shop/ProductDetailView.vue')
+        },
+        {
+          path: 'carrito',
+          name: 'carrito',
+          component: () => import('../views/shop/CartView.vue')
+        },
+        {
+          path: 'mi-cuenta',
+          name: 'mi-cuenta',
+          component: () => import('../views/shop/MyAccountView.vue'),
+          meta: { requiresAuth: true }
+        }
+      ]
     },
-    {
-      path: '/carrito',
-      name: 'carrito',
-      component: () => import('../views/shop/CartView.vue')
-    },
-    {
-      path: '/mi-cuenta',
-      name: 'mi-cuenta',
-      component: () => import('../views/shop/MyAccountView.vue')
-    },
+    // Rutas sin layout (Login y Registro)
     {
       path: '/registro',
       name: 'registro',

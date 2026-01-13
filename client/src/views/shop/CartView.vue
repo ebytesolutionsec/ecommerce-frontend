@@ -1,7 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <ShopNavbar />
-
+  <div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <!-- Header -->
       <div class="mb-8">
@@ -174,15 +172,11 @@
         </div>
       </div>
     </div>
-
-    <ShopFooter />
   </div>
 </template>
 
 <script setup>
 import { useCart } from '../../composables/useCart.js'
-import ShopNavbar from '../../components/shop/ShopNavbar.vue'
-import ShopFooter from '../../components/shop/ShopFooter.vue'
 
 const { cartItems, cartItemCount, cartTotal, removeFromCart, updateQuantity } = useCart()
 
@@ -193,7 +187,14 @@ const formatPrice = (price) => {
 
 const getProductImage = (item) => {
   if (item.image) return item.image
-  if (item.img_prod) return `http://localhost:3000${item.img_prod}`
+  if (item.img_prod) {
+    // Si ya es una URL completa, devolverla tal cual
+    if (item.img_prod.startsWith('http')) {
+      return item.img_prod
+    }
+    // Si es una ruta relativa, agregar el servidor
+    return `http://localhost:3000${item.img_prod}`
+  }
   return 'https://via.placeholder.com/300x300?text=Producto'
 }
 

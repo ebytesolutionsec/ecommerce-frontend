@@ -1,8 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Navbar -->
-    <ShopNavbar />
-
+  <div>
     <!-- Hero Section / Banner Principal -->
     <section class="bg-gradient-to-r from-[#a3195b] via-[#662482] to-[#e2312d] text-white py-16 relative overflow-hidden">
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -165,17 +162,12 @@
         </div>
       </div>
     </section>
-
-    <!-- Footer -->
-    <ShopFooter />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import ShopNavbar from '../../components/shop/ShopNavbar.vue'
-import ShopFooter from '../../components/shop/ShopFooter.vue'
 import ProductCard from '../../components/shop/ProductCard.vue'
 import Pagination from '../../components/common/Pagination.vue'
 import { productService } from '../../services/productService.js'

@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <ShopNavbar />
+  <div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <!-- No autenticado -->
@@ -130,16 +129,12 @@
         </div>
       </div>
     </div>
-
-    <ShopFooter />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '../../composables/useAuth.js'
-import ShopNavbar from '../../components/shop/ShopNavbar.vue'
-import ShopFooter from '../../components/shop/ShopFooter.vue'
 
 const { isAuthenticated, user } = useAuth()
 
