@@ -135,8 +135,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '../../composables/useAuth.js'
+import authService from '../../services/authService.js'
 
-const { isAuthenticated, user } = useAuth()
+const { isAuthenticated } = useAuth()
 
 const selectedView = ref('profile')
 const userData = ref({
@@ -199,8 +200,18 @@ const menuItems = [
 
 // Methods
 const loadUserData = () => {
-  if (user.value) {
-    userData.value = { ...user.value }
+  const token = authService.getToken()
+  if (token) {
+    try {
+      const decoded = JSON.parse(atob(token.split('.')[1]))
+      userData.value.nombre = decoded.nombre || decoded.fullName || ''
+      userData.value.apellido = decoded.apellido || ''
+      userData.value.correo = decoded.correo || decoded.email || ''
+      userData.value.telefono = decoded.telefono || decoded.phone || ''
+      userData.value.direccion = decoded.direccion || ''
+    } catch (error) {
+      console.error('Error al decodificar token:', error)
+    }
   }
 }
 

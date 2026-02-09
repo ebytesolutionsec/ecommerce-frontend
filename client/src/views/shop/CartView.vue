@@ -134,11 +134,12 @@
               </div>
             </div>
 
-            <button
-              class="w-full py-3 bg-gradient-to-r from-[#a3195b] to-[#662482] text-white font-semibold rounded-lg hover:opacity-90 transition mb-3"
+            <router-link
+              to="/checkout"
+              class="block w-full py-3 bg-gradient-to-r from-[#a3195b] to-[#662482] text-white font-semibold rounded-lg hover:opacity-90 transition mb-3 text-center"
             >
               Proceder al Pago
-            </button>
+            </router-link>
 
             <router-link
               to="/"
