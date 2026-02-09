@@ -62,18 +62,38 @@
       >
         {{ isSubmitting ? 'Entrando...' : 'Entrar' }}
       </button>
+
+      <!-- Enlace para crear cuenta -->
+      <div class="text-center mt-4">
+        <p class="text-white/80 text-sm">
+          ¿No tienes cuenta?
+          <router-link
+            :to="{ name: 'registro', query: redirectQuery }"
+            class="text-white font-semibold hover:underline ml-1"
+          >
+            Crear cuenta
+          </router-link>
+        </p>
+      </div>
     </form>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { validateEmailFormat } from '../../utils/validators'
 import { useAuth } from '../../composables/useAuth'
 import authService from '../../services/authService'
 
 const emit = defineEmits(['login-success'])
 const { login } = useAuth()
+const route = useRoute()
+
+// Pasar el redirect al registro si existe
+const redirectQuery = computed(() => {
+  return route.query.redirect ? { redirect: route.query.redirect } : {}
+})
 
 const form = reactive({
   email: '',

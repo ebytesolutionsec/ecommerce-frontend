@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import authService from '../services/authService'
+import { jwtDecode } from 'jwt-decode'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,9 +26,33 @@ const router = createRouter({
           component: () => import('../views/shop/CartView.vue')
         },
         {
+          path: 'checkout',
+          name: 'checkout',
+          component: () => import('../views/shop/CheckoutView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
           path: 'mi-cuenta',
           name: 'mi-cuenta',
           component: () => import('../views/shop/MyAccountView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'mis-ordenes',
+          name: 'mis-ordenes',
+          component: () => import('../views/shop/MisOrdenesView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'pago/respuesta',
+          name: 'pago-respuesta',
+          component: () => import('../views/shop/PaymentResponseView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'pago/cancelado',
+          name: 'pago-cancelado',
+          component: () => import('../views/shop/PaymentResponseView.vue'),
           meta: { requiresAuth: true }
         }
       ]
@@ -102,7 +127,14 @@ router.beforeEach((to, from, next) => {
   }
   // Si intenta ir al login y ya tiene un token válido
   else if (to.meta.requiresGuest && isAuthenticated) {
-    next('/admin')
+    // Redirigir según el rol del usuario
+    try {
+      const token = authService.getToken()
+      const decoded = jwtDecode(token)
+      next(decoded.rol === 'comprador' ? '/' : '/admin')
+    } catch {
+      next('/admin')
+    }
   }
   // Permitir navegación
   else {

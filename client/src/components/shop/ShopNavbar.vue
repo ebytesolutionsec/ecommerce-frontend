@@ -79,35 +79,48 @@
                 v-if="isAccountDropdownOpen"
                 class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200"
               >
-                <router-link
-                  to="/mi-cuenta"
-                  @click="closeAccountDropdown"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
-                >
-                  Mi Perfil
-                </router-link>
-                <router-link
-                  to="/mis-ordenes"
-                  @click="closeAccountDropdown"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
-                >
-                  Mis Órdenes
-                </router-link>
-                <hr class="my-2 border-gray-200" />
-                <router-link
-                  to="/login"
-                  @click="closeAccountDropdown"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
-                >
-                  Iniciar Sesión
-                </router-link>
-                <router-link
-                  to="/registro"
-                  @click="closeAccountDropdown"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
-                >
-                  Crear Cuenta
-                </router-link>
+                <!-- Opciones cuando está autenticado -->
+                <template v-if="isAuthenticated">
+                  <router-link
+                    to="/mi-cuenta"
+                    @click="closeAccountDropdown"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
+                  >
+                    Mi Perfil
+                  </router-link>
+                  <router-link
+                    to="/mis-ordenes"
+                    @click="closeAccountDropdown"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
+                  >
+                    Mis Órdenes
+                  </router-link>
+                  <hr class="my-2 border-gray-200" />
+                  <button
+                    @click="handleLogout"
+                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                  >
+                    Cerrar Sesión
+                  </button>
+                </template>
+
+                <!-- Opciones cuando NO está autenticado -->
+                <template v-else>
+                  <router-link
+                    to="/login"
+                    @click="closeAccountDropdown"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
+                  >
+                    Iniciar Sesión
+                  </router-link>
+                  <router-link
+                    to="/registro"
+                    @click="closeAccountDropdown"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-[#f8edf2] hover:to-[#f3edf5] transition"
+                  >
+                    Crear Cuenta
+                  </router-link>
+                </template>
               </div>
             </transition>
           </div>
@@ -194,11 +207,14 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCart } from '../../composables/useCart.js'
+import { useAuth } from '../../composables/useAuth.js'
 import { categoryService } from '../../services/categoryService.js'
+import authService from '../../services/authService.js'
 
 const router = useRouter()
 const route = useRoute()
 const { cartItemCount } = useCart()
+const { isAuthenticated, logout } = useAuth()
 
 // Estado
 const searchQuery = ref('')
@@ -255,6 +271,14 @@ const closeAccountDropdown = () => {
 // Menu Mobile
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+// Cerrar sesión
+const handleLogout = () => {
+  authService.removeToken()
+  logout()
+  closeAccountDropdown()
+  router.push('/')
 }
 
 // Click fuera del dropdown

@@ -192,7 +192,7 @@
 
         <!-- Link a Login -->
         <router-link
-          to="/login"
+          :to="{ name: 'login', query: route.query.redirect ? { redirect: route.query.redirect } : {} }"
           class="block w-full py-3 text-center border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition"
         >
           Iniciar Sesión
@@ -212,11 +212,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useToast } from '../../composables/useToast.js'
-import { authService } from '../../services/authService.js'
+import authService from '../../services/authService.js'
 
 const router = useRouter()
+const route = useRoute()
 const { success, error: showError } = useToast()
 
 // Estado
@@ -289,23 +290,31 @@ const handleSubmit = async () => {
 
   try {
     // Registrar usuario usando el servicio de autenticación
-    await authService.register({
+    const registerData = {
       dni: formData.value.dni,
       fullName: formData.value.fullName,
       email: formData.value.email,
       phone: formData.value.phone,
       direccion: formData.value.direccion,
       password: formData.value.password
-    })
+    }
+
+    console.log('Datos de registro:', registerData)
+    await authService.register(registerData)
 
     success(
       'Cuenta creada exitosamente',
       'Tu cuenta ha sido creada. Ya puedes iniciar sesión'
     )
 
-    // Redirigir al login después de 1 segundo
+    // Redirigir al login después de 1 segundo, preservando el redirect si existe
     setTimeout(() => {
-      router.push('/login')
+      const redirectPath = route.query.redirect
+      if (redirectPath) {
+        router.push({ name: 'login', query: { redirect: redirectPath } })
+      } else {
+        router.push('/login')
+      }
     }, 1000)
   } catch (error) {
     console.error('Error al crear cuenta:', error)

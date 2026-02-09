@@ -31,8 +31,10 @@ const handleResponse = async (response) => {
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Error en la petición' }))
-    throw new Error(error.message || 'Error en la petición')
+    const errorData = await response.json().catch(() => ({ message: 'Error en la petición' }))
+    // El backend puede enviar el error en 'message' o en 'error'
+    const errorMessage = errorData.error || errorData.message || 'Error en la petición'
+    throw new Error(errorMessage)
   }
   return response.json()
 }

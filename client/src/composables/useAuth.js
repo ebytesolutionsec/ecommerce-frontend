@@ -1,6 +1,8 @@
 import { ref } from 'vue'
 
-const isAuthenticated = ref(false)
+const isAuthenticated = ref(
+  localStorage.getItem('isAuthenticated') === 'true' && !!localStorage.getItem('auth_token')
+)
 
 export const useAuth = () => {
   const login = () => {

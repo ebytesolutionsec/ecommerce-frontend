@@ -40,13 +40,40 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import LoginForm from '../components/auth/LoginForm.vue'
+import authService from '../services/authService.js'
+import { jwtDecode } from 'jwt-decode'
 
 const router = useRouter()
+const route = useRoute()
 
 const handleLoginSuccess = () => {
-  router.push('/admin')
+  // Si hay un redirect en la query, ir ahí
+  const redirectPath = route.query.redirect
+
+  if (redirectPath) {
+    router.push(redirectPath)
+    return
+  }
+
+  // Si no hay redirect, verificar el rol del usuario
+  const token = authService.getToken()
+  if (token) {
+    try {
+      const decoded = jwtDecode(token)
+      // Si es comprador, ir a home, si es admin/vendedor ir a admin
+      if (decoded.rol === 'comprador') {
+        router.push('/')
+      } else {
+        router.push('/admin')
+      }
+    } catch (error) {
+      router.push('/admin')
+    }
+  } else {
+    router.push('/admin')
+  }
 }
 </script>
 
