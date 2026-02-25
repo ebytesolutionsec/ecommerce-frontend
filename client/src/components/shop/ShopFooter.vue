@@ -41,7 +41,7 @@
               <router-link to="/" class="text-sm hover:text-[#a3195b] transition">Inicio</router-link>
             </li>
             <li>
-              <router-link to="/productos" class="text-sm hover:text-[#a3195b] transition">Productos</router-link>
+              <router-link to="/" class="text-sm hover:text-[#a3195b] transition">Productos</router-link>
             </li>
             <li>
               <router-link to="/mi-cuenta" class="text-sm hover:text-[#a3195b] transition">Mi Cuenta</router-link>
