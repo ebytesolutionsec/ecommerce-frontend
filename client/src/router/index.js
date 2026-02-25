@@ -108,6 +108,11 @@ const router = createRouter({
           path: 'inventario',
           name: 'admin-inventario',
           component: () => import('../views/dashboard/InventarioView.vue')
+        },
+        {
+          path: 'metodos-pago',
+          name: 'admin-metodos-pago',
+          component: () => import('../views/dashboard/MetodosPagoView.vue')
         }
       ]
     }

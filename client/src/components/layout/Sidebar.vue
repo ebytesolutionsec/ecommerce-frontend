@@ -100,7 +100,8 @@ const menuItems = [
   { name: 'Pagos', label: 'Pagos', icon: PaymentsIcon, path: '/admin/pagos' },
   { name: 'Productos', label: 'Productos', icon: ProductsIcon, path: '/admin/productos' },
   { name: 'Categorias', label: 'Categorías', icon: CategoriesIcon, path: '/admin/categorias' },
-  { name: 'Inventario', label: 'Inventario', icon: InventoryIcon, path: '/admin/inventario' }
+  { name: 'Inventario', label: 'Inventario', icon: InventoryIcon, path: '/admin/inventario' },
+  { name: 'MetodosPago', label: 'Metodos de Pago', icon: PaymentsIcon, path: '/admin/metodos-pago' }
 ]
 
 const handleItemClick = (item) => {

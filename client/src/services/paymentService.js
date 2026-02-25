@@ -9,7 +9,7 @@ export const paymentService = {
 
   // Listar todos los pagos (Admin)
   listAll: async (page = 1, limit = 100) => {
-    return api.get(`/payment/list?page=${page}&limit=${limit}`)
+    return api.get(`/payment/list/all?page=${page}&limit=${limit}`)
   },
 
   // Listar pagos del usuario autenticado
@@ -35,6 +35,16 @@ export const paymentService = {
   // Crear método de pago (Admin)
   createPaymentMethod: async (methodData) => {
     return api.post('/payment/method/create', methodData)
+  },
+
+  // Actualizar método de pago (Admin)
+  updatePaymentMethod: async (methodId, methodData) => {
+    return api.patch(`/payment/method/${methodId}`, methodData)
+  },
+
+  // Eliminar método de pago (Admin)
+  deletePaymentMethod: async (methodId) => {
+    return api.delete(`/payment/method/${methodId}`)
   },
 
   // ============================================
