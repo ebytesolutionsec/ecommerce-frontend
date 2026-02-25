@@ -459,11 +459,26 @@
       </div>
     </div>
   </div>
+
+  <!-- Overlay de redirección a PayPhone -->
+  <LoadingOverlay
+    :show="redirectingToPayphone"
+    title="Preparando tu pago seguro"
+    message="Serás redirigido a PayPhone en un momento..."
+    badge="Conexión segura y cifrada"
+  >
+    <template #icon>
+      <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+      </svg>
+    </template>
+  </LoadingOverlay>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import LoadingOverlay from '../../components/common/LoadingOverlay.vue'
 import { useCart } from '../../composables/useCart.js'
 import { useToast } from '../../composables/useToast.js'
 import authService from '../../services/authService.js'
@@ -477,6 +492,7 @@ const { success, error: showError } = useToast()
 // Estado
 const currentStep = ref(1)
 const processingOrder = ref(false)
+const redirectingToPayphone = ref(false)
 const paymentMethod = ref('')
 const paymentMethods = ref([])
 const loadingMethods = ref(false)
@@ -692,6 +708,7 @@ const getErrorMessage = (backendMessage) => {
 
 // Manejar pago con PayPhone
 const handlePayPhonePayment = async (orderId, orderNumber) => {
+  redirectingToPayphone.value = true
   try {
     // Generar ID único de transacción del comercio
     const clientTransactionId = `ORD-${orderId}-${Date.now()}`
@@ -717,7 +734,7 @@ const handlePayPhonePayment = async (orderId, orderNumber) => {
       clientTransactionId,
       reference: `Orden ${orderId}`,
       responseUrl: `${window.location.origin}/pago/respuesta`,
-      cancellationUrl: `${window.location.origin}/pago/cancelado`
+      cancellationUrl: `${window.location.origin}/pago/cancelado?idOrden=${orderId}`
     }
 
     // Llamar al backend para preparar el pago con PayPhone
@@ -736,7 +753,7 @@ const handlePayPhonePayment = async (orderId, orderNumber) => {
 
   } catch (error) {
     console.error('Error al preparar pago PayPhone:', error)
-    // Limpiar datos pendientes
+    redirectingToPayphone.value = false
     localStorage.removeItem('pending_payphone_payment')
     throw error
   }

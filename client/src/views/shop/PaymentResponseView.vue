@@ -145,16 +145,20 @@ const formatAmount = (cents) => {
 const processPayPhoneResponse = async () => {
   try {
     // Obtener parámetros de la URL (PayPhone los envía como query params)
-    const { id, clientTransactionId } = route.query
+    // idOrden viene en la cancellationUrl que construimos en el checkout
+    const { id, clientTransactionId, idOrden: idOrdenFromUrl } = route.query
 
     // Recuperar datos de localStorage
     const pendingPayment = JSON.parse(localStorage.getItem('pending_payphone_payment') || '{}')
+
+    // idOrden: prioridad a la URL (siempre disponible), fallback a localStorage
+    const idOrden = idOrdenFromUrl || pendingPayment.orderId
 
     // Detectar si fue cancelación por la ruta
     const isCancelled = route.path.includes('cancelado')
 
     // Si no hay parámetros ni datos pendientes
-    if (!id && !clientTransactionId && !pendingPayment.orderId) {
+    if (!id && !clientTransactionId && !idOrden) {
       // Si fue cancelación sin datos, mostrar cancelado (no error)
       if (isCancelled) {
         paymentStatus.value = 'cancelled'
@@ -170,7 +174,7 @@ const processPayPhoneResponse = async () => {
     const confirmData = {
       id: parseInt(id) || 0,
       clientTransactionId: clientTransactionId || pendingPayment.clientTransactionId,
-      idOrden: pendingPayment.orderId,
+      idOrden,
       idPaymentMethod: pendingPayment.idPaymentMethod
     }
 
