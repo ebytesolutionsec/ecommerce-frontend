@@ -14,10 +14,7 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a3195b]"></div>
-      <span class="ml-3 text-gray-600">Cargando metodos de pago...</span>
-    </div>
+    <LoadingSpinner v-if="loading" message="Cargando metodos de pago..." />
 
     <!-- Error -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
@@ -101,227 +98,148 @@
     </div>
 
     <!-- Modal Crear/Editar Metodo de Pago -->
-    <transition
-      enter-active-class="transition ease-out duration-300"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition ease-in duration-200"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+    <Modal
+      :show="showModal"
+      :title="isEditing ? 'Editar Metodo de Pago' : 'Nuevo Metodo de Pago'"
+      :confirm-text="isEditing ? 'Guardar Cambios' : 'Crear Metodo'"
+      :loading="submitting"
+      @close="closeModal"
+      @confirm="submitForm"
     >
-      <div
-        v-if="showModal"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-        @click.self="closeModal"
-      >
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto" @click.stop>
-          <div class="p-6">
-            <div class="flex justify-between items-start mb-6">
-              <h3 class="text-2xl font-bold text-gray-900">
-                {{ isEditing ? 'Editar Metodo de Pago' : 'Nuevo Metodo de Pago' }}
-              </h3>
-              <button @click="closeModal" class="text-gray-400 hover:text-gray-600 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+      <form ref="formRef" @submit.prevent="handleSubmit" class="space-y-4">
+        <!-- Nombre -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+          <input
+            v-model="form.name"
+            type="text"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
+            placeholder="Ej: Pago con Tarjeta"
+          />
+        </div>
+
+        <!-- Proveedor -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Proveedor *</label>
+          <select
+            v-model="form.provider"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
+          >
+            <option value="">Seleccionar...</option>
+            <option value="card payment">Pago con Tarjeta (PayPhone)</option>
+            <option value="bank transfer">Transferencia Bancaria</option>
+          </select>
+        </div>
+
+        <!-- Estado -->
+        <div class="flex items-center gap-2">
+          <input
+            v-model="form.active"
+            type="checkbox"
+            id="active"
+            class="w-4 h-4 text-[#a3195b] focus:ring-[#a3195b] rounded"
+          />
+          <label for="active" class="text-sm font-medium text-gray-700">Activo</label>
+        </div>
+
+        <!-- Formulario de transferencia -->
+        <transition
+          enter-active-class="transition ease-out duration-200"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-150"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <div v-if="form.provider === 'bank transfer'" class="bg-gray-50 rounded-lg p-4 space-y-3">
+            <h4 class="text-sm font-semibold text-gray-700">Datos de la cuenta bancaria</h4>
+
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">Banco *</label>
+              <input
+                v-model="form.config.banco"
+                type="text"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
+                placeholder="Ej: Banco Pichincha"
+              />
             </div>
 
-            <form @submit.prevent="handleSubmit" class="space-y-4">
-              <!-- Nombre -->
+            <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-                <input
-                  v-model="form.name"
-                  type="text"
-                  required
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
-                  placeholder="Ej: Pago con Tarjeta"
-                />
-              </div>
-
-              <!-- Proveedor -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Proveedor *</label>
+                <label class="block text-sm text-gray-600 mb-1">Tipo de Cuenta *</label>
                 <select
-                  v-model="form.provider"
+                  v-model="form.config.tipoCuenta"
                   required
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
                 >
                   <option value="">Seleccionar...</option>
-                  <option value="card payment">Pago con Tarjeta (PayPhone)</option>
-                  <option value="bank transfer">Transferencia Bancaria</option>
+                  <option value="Ahorros">Ahorros</option>
+                  <option value="Corriente">Corriente</option>
                 </select>
               </div>
-
-              <!-- Estado -->
-              <div class="flex items-center gap-2">
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">N. de Cuenta *</label>
                 <input
-                  v-model="form.active"
-                  type="checkbox"
-                  id="active"
-                  class="w-4 h-4 text-[#a3195b] focus:ring-[#a3195b] rounded"
+                  v-model="form.config.numeroCuenta"
+                  type="text"
+                  required
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
+                  placeholder="1234567890"
                 />
-                <label for="active" class="text-sm font-medium text-gray-700">Activo</label>
               </div>
+            </div>
 
-              <!-- Formulario de transferencia -->
-              <transition
-                enter-active-class="transition ease-out duration-200"
-                enter-from-class="opacity-0 -translate-y-2"
-                enter-to-class="opacity-100 translate-y-0"
-                leave-active-class="transition ease-in duration-150"
-                leave-from-class="opacity-100 translate-y-0"
-                leave-to-class="opacity-0 -translate-y-2"
-              >
-                <div v-if="form.provider === 'bank transfer'" class="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <h4 class="text-sm font-semibold text-gray-700">Datos de la cuenta bancaria</h4>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">Beneficiario *</label>
+              <input
+                v-model="form.config.beneficiario"
+                type="text"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
+                placeholder="EBYTE SOLUTIONS"
+              />
+            </div>
 
-                  <div>
-                    <label class="block text-sm text-gray-600 mb-1">Banco *</label>
-                    <input
-                      v-model="form.config.banco"
-                      type="text"
-                      required
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
-                      placeholder="Ej: Banco Pichincha"
-                    />
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-3">
-                    <div>
-                      <label class="block text-sm text-gray-600 mb-1">Tipo de Cuenta *</label>
-                      <select
-                        v-model="form.config.tipoCuenta"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
-                      >
-                        <option value="">Seleccionar...</option>
-                        <option value="Ahorros">Ahorros</option>
-                        <option value="Corriente">Corriente</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="block text-sm text-gray-600 mb-1">N. de Cuenta *</label>
-                      <input
-                        v-model="form.config.numeroCuenta"
-                        type="text"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
-                        placeholder="1234567890"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm text-gray-600 mb-1">Beneficiario *</label>
-                    <input
-                      v-model="form.config.beneficiario"
-                      type="text"
-                      required
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
-                      placeholder="EBYTE SOLUTIONS"
-                    />
-                  </div>
-
-                  <div>
-                    <label class="block text-sm text-gray-600 mb-1">RUC / Cedula *</label>
-                    <input
-                      v-model="form.config.ruc"
-                      type="text"
-                      required
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
-                      placeholder="0999999999001"
-                    />
-                  </div>
-                </div>
-              </transition>
-
-              <!-- Botones -->
-              <div class="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  @click="closeModal"
-                  class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  :disabled="submitting"
-                  class="px-6 py-2 bg-gradient-to-r from-[#a3195b] to-[#662482] text-white rounded-lg hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
-                >
-                  <svg v-if="submitting" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {{ submitting ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Crear Metodo') }}
-                </button>
-              </div>
-            </form>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">RUC / Cedula *</label>
+              <input
+                v-model="form.config.ruc"
+                type="text"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent text-sm"
+                placeholder="0999999999001"
+              />
+            </div>
           </div>
-        </div>
-      </div>
-    </transition>
+        </transition>
+
+        <!-- Submit oculto para activar validación nativa del formulario -->
+        <button type="submit" class="hidden"></button>
+      </form>
+    </Modal>
 
     <!-- Modal Confirmar Eliminacion -->
-    <transition
-      enter-active-class="transition ease-out duration-300"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition ease-in duration-200"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+    <Modal
+      :show="showDeleteModal"
+      title="Eliminar Metodo de Pago"
+      confirm-text="Eliminar"
+      :loading="deleting"
+      @close="showDeleteModal = false"
+      @confirm="handleDelete"
     >
-      <div
-        v-if="showDeleteModal"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-        @click.self="showDeleteModal = false"
-      >
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full" @click.stop>
-          <div class="p-6">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-gray-900">Eliminar metodo de pago</h3>
-                <p class="text-sm text-gray-500">Esta accion no se puede deshacer</p>
-              </div>
-            </div>
-            <p class="text-gray-700 mb-6">
-              Estas seguro de que deseas eliminar <strong>{{ methodToDelete?.name }}</strong>?
-            </p>
-            <div class="flex justify-end gap-3">
-              <button
-                @click="showDeleteModal = false"
-                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-              >
-                Cancelar
-              </button>
-              <button
-                @click="handleDelete"
-                :disabled="deleting"
-                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
-              >
-                <svg v-if="deleting" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {{ deleting ? 'Eliminando...' : 'Eliminar' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </transition>
+      <p class="text-gray-600">Estas seguro de que deseas eliminar <strong>{{ methodToDelete?.name }}</strong>?</p>
+      <p class="text-sm text-red-600 mt-2">Esta accion no se puede deshacer.</p>
+    </Modal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import Modal from '../../components/common/Modal.vue'
+import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import paymentService from '../../services/paymentService.js'
 import { useToast } from '../../composables/useToast.js'
 
@@ -337,6 +255,12 @@ const submitting = ref(false)
 const deleting = ref(false)
 const editingId = ref(null)
 const methodToDelete = ref(null)
+const formRef = ref(null)
+
+// Disparar submit del formulario desde el botón del Modal
+const submitForm = () => {
+  formRef.value?.requestSubmit()
+}
 
 const isEditing = computed(() => !!editingId.value)
 

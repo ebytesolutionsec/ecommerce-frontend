@@ -11,10 +11,7 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center items-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a3195b]"></div>
-      <span class="ml-3 text-gray-600">Cargando ordenes...</span>
-    </div>
+    <LoadingSpinner v-if="loading" message="Cargando ordenes..." />
 
     <!-- Error -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
@@ -96,137 +93,111 @@
     </div>
 
     <!-- Modal de Detalles -->
-    <transition
-      enter-active-class="transition ease-out duration-300"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition ease-in duration-200"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+    <Modal
+      :show="!!selectedOrder"
+      title="Detalles de la Orden"
+      :show-footer="false"
+      @close="closeModal"
     >
-      <div
-        v-if="selectedOrder"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-        @click.self="closeModal"
-      >
-        <div
-          class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-          @click.stop
-        >
-          <div class="p-6">
-            <!-- Header -->
-            <div class="flex justify-between items-start mb-6">
-              <div>
-                <h3 class="text-2xl font-bold text-gray-900">Detalles de la Orden</h3>
-                <p class="text-sm text-gray-500 mt-1">
-                  <span class="font-semibold">{{ selectedOrder.order_number }}</span>
-                  <span class="font-mono ml-2">{{ formatId(selectedOrder._id) }}</span>
-                </p>
-              </div>
-              <button
-                @click="closeModal"
-                class="text-gray-400 hover:text-gray-600 transition"
-              >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+      <template v-if="selectedOrder">
+        <!-- Subtitulo -->
+        <p class="text-sm text-gray-500 -mt-2 mb-4">
+          <span class="font-semibold">{{ selectedOrder.order_number }}</span>
+          <span class="font-mono ml-2">{{ formatId(selectedOrder._id) }}</span>
+        </p>
 
-            <!-- Informacion del Cliente -->
-            <div class="mb-6">
-              <h4 class="text-lg font-semibold text-gray-900 mb-3">Informacion del Cliente</h4>
-              <div class="bg-gray-50 rounded-lg p-4 space-y-2">
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Nombre:</span>
-                  <span class="font-medium text-gray-900">{{ selectedOrder.userId?.fullName || 'N/A' }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Email:</span>
-                  <span class="font-medium text-gray-900">{{ selectedOrder.userId?.email || 'N/A' }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Telefono:</span>
-                  <span class="font-medium text-gray-900">{{ selectedOrder.userId?.phone || 'N/A' }}</span>
-                </div>
-                <div v-if="selectedOrder.shipping_address" class="flex justify-between">
-                  <span class="text-gray-600">Direccion de envio:</span>
-                  <span class="font-medium text-gray-900">
-                    {{ formatShippingAddress(selectedOrder.shipping_address) }}
-                  </span>
-                </div>
-              </div>
+        <!-- Informacion del Cliente -->
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold text-gray-900 mb-3">Informacion del Cliente</h4>
+          <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Nombre:</span>
+              <span class="font-medium text-gray-900">{{ selectedOrder.userId?.fullName || 'N/A' }}</span>
             </div>
-
-            <!-- Items de la Orden -->
-            <div class="mb-6">
-              <h4 class="text-lg font-semibold text-gray-900 mb-3">Productos</h4>
-              <div class="space-y-3">
-                <div
-                  v-for="item in selectedOrder.items"
-                  :key="item._id"
-                  class="flex items-center justify-between bg-gray-50 rounded-lg p-4"
-                >
-                  <div class="flex-1">
-                    <p class="font-medium text-gray-900">{{ item.product_name || item.product?.name || 'Producto' }}</p>
-                    <p class="text-sm text-gray-500">Cantidad: {{ item.quantity }}</p>
-                    <p v-if="item.product_sku" class="text-xs text-gray-400">SKU: {{ item.product_sku }}</p>
-                  </div>
-                  <div class="text-right">
-                    <p class="font-semibold text-gray-900">
-                      ${{ formatPrice(item.total_price) }}
-                    </p>
-                    <p class="text-sm text-gray-500">${{ formatPrice(item.unit_price) }} c/u</p>
-                  </div>
-                </div>
-              </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Email:</span>
+              <span class="font-medium text-gray-900">{{ selectedOrder.userId?.email || 'N/A' }}</span>
             </div>
-
-            <!-- Resumen -->
-            <div class="border-t border-gray-200 pt-4">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-gray-600">Subtotal:</span>
-                <span class="font-medium text-gray-900">${{ formatPrice(selectedOrder.subtotal) }}</span>
-              </div>
-              <div v-if="selectedOrder.tax" class="flex justify-between items-center mb-2">
-                <span class="text-gray-600">IVA (12%):</span>
-                <span class="font-medium text-gray-900">${{ formatPrice(selectedOrder.tax) }}</span>
-              </div>
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-gray-600">Envio:</span>
-                <span class="font-medium text-green-600">{{ selectedOrder.shipping_cost > 0 ? '$' + formatPrice(selectedOrder.shipping_cost) : 'Gratis' }}</span>
-              </div>
-              <div class="flex justify-between items-center text-lg font-bold border-t border-gray-200 pt-2 mt-2">
-                <span class="text-gray-900">Total:</span>
-                <span class="text-[#a3195b]">${{ formatPrice(selectedOrder.total) }}</span>
-              </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Telefono:</span>
+              <span class="font-medium text-gray-900">{{ selectedOrder.userId?.phone || 'N/A' }}</span>
             </div>
+            <div v-if="selectedOrder.shipping_address" class="flex justify-between">
+              <span class="text-gray-600">Direccion de envio:</span>
+              <span class="font-medium text-gray-900">
+                {{ formatShippingAddress(selectedOrder.shipping_address) }}
+              </span>
+            </div>
+          </div>
+        </div>
 
-            <!-- Estado y Fecha -->
-            <div class="mt-6 flex items-center justify-between bg-gray-50 rounded-lg p-4">
-              <div>
-                <p class="text-sm text-gray-600">Estado:</p>
-                <span
-                  class="inline-flex mt-1 px-3 py-1 text-sm font-semibold rounded-full"
-                  :class="getStatusClass(selectedOrder.status)"
-                >
-                  {{ getStatusLabel(selectedOrder.status) }}
-                </span>
+        <!-- Items de la Orden -->
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold text-gray-900 mb-3">Productos</h4>
+          <div class="space-y-3">
+            <div
+              v-for="item in selectedOrder.items"
+              :key="item._id"
+              class="flex items-center justify-between bg-gray-50 rounded-lg p-4"
+            >
+              <div class="flex-1">
+                <p class="font-medium text-gray-900">{{ item.product_name || item.product?.name || 'Producto' }}</p>
+                <p class="text-sm text-gray-500">Cantidad: {{ item.quantity }}</p>
+                <p v-if="item.product_sku" class="text-xs text-gray-400">SKU: {{ item.product_sku }}</p>
               </div>
               <div class="text-right">
-                <p class="text-sm text-gray-600">Fecha de creacion:</p>
-                <p class="text-sm font-medium text-gray-900 mt-1">{{ formatDate(selectedOrder.createdAt) }}</p>
+                <p class="font-semibold text-gray-900">${{ formatPrice(item.total_price) }}</p>
+                <p class="text-sm text-gray-500">${{ formatPrice(item.unit_price) }} c/u</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </transition>
+
+        <!-- Resumen -->
+        <div class="border-t border-gray-200 pt-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-gray-600">Subtotal:</span>
+            <span class="font-medium text-gray-900">${{ formatPrice(selectedOrder.subtotal) }}</span>
+          </div>
+          <div v-if="selectedOrder.tax" class="flex justify-between items-center mb-2">
+            <span class="text-gray-600">IVA (12%):</span>
+            <span class="font-medium text-gray-900">${{ formatPrice(selectedOrder.tax) }}</span>
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-gray-600">Envio:</span>
+            <span class="font-medium text-green-600">{{ selectedOrder.shipping_cost > 0 ? '$' + formatPrice(selectedOrder.shipping_cost) : 'Gratis' }}</span>
+          </div>
+          <div class="flex justify-between items-center text-lg font-bold border-t border-gray-200 pt-2 mt-2">
+            <span class="text-gray-900">Total:</span>
+            <span class="text-[#a3195b]">${{ formatPrice(selectedOrder.total) }}</span>
+          </div>
+        </div>
+
+        <!-- Estado y Fecha -->
+        <div class="mt-6 flex items-center justify-between bg-gray-50 rounded-lg p-4">
+          <div>
+            <p class="text-sm text-gray-600">Estado:</p>
+            <span
+              class="inline-flex mt-1 px-3 py-1 text-sm font-semibold rounded-full"
+              :class="getStatusClass(selectedOrder.status)"
+            >
+              {{ getStatusLabel(selectedOrder.status) }}
+            </span>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-600">Fecha de creacion:</p>
+            <p class="text-sm font-medium text-gray-900 mt-1">{{ formatDate(selectedOrder.createdAt) }}</p>
+          </div>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import Modal from '../../components/common/Modal.vue'
+import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import orderService from '../../services/orderService.js'
 import { useToast } from '../../composables/useToast.js'
 

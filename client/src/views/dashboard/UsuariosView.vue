@@ -28,11 +28,8 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="loading">
-              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                <div class="flex justify-center items-center">
-                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a3195b]"></div>
-                  <span class="ml-3">Cargando usuarios...</span>
-                </div>
+              <td colspan="5" class="px-6 py-12">
+                <LoadingSpinner message="Cargando usuarios..." container-class="" size="md" />
               </td>
             </tr>
             <tr v-else-if="paginatedUsers.length === 0">
@@ -99,6 +96,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import Modal from '../../components/common/Modal.vue'
+import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import UserForm from '../../components/users/UserForm.vue'
 import Pagination from '../../components/common/Pagination.vue'
 import userService from '../../services/userService.js'

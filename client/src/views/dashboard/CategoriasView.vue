@@ -27,11 +27,8 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-if="loading">
-              <td colspan="4" class="px-6 py-12 text-center text-gray-500">
-                <div class="flex justify-center items-center">
-                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#a3195b]"></div>
-                  <span class="ml-3">Cargando categorías...</span>
-                </div>
+              <td colspan="4" class="px-6 py-12">
+                <LoadingSpinner message="Cargando categorías..." container-class="" size="md" />
               </td>
             </tr>
             <tr v-else-if="paginatedCategories.length === 0">
@@ -106,6 +103,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import Modal from '../../components/common/Modal.vue'
+import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import CategoryForm from '../../components/categories/CategoryForm.vue'
 import Pagination from '../../components/common/Pagination.vue'
 import categoryService from '../../services/categoryService.js'
