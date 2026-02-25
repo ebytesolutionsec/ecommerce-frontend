@@ -144,66 +144,73 @@ const formatAmount = (cents) => {
 // Procesar respuesta de PayPhone
 const processPayPhoneResponse = async () => {
   try {
-    // DEBUG: Ver todos los parámetros que envía PayPhone
-    //console.log('URL completa:', window.location.href)
-   // console.log('Query params:', route.query)
-
     // Obtener parámetros de la URL (PayPhone los envía como query params)
     const { id, clientTransactionId } = route.query
 
-    // Verificar si es una cancelación (ruta /pago/cancelado)
-    if (route.path.includes('cancelado')) {
-      paymentStatus.value = 'cancelled'
+    // Recuperar datos de localStorage
+    const pendingPayment = JSON.parse(localStorage.getItem('pending_payphone_payment') || '{}')
+
+    // Detectar si fue cancelación por la ruta
+    const isCancelled = route.path.includes('cancelado')
+
+    // Si no hay parámetros ni datos pendientes
+    if (!id && !clientTransactionId && !pendingPayment.orderId) {
+      // Si fue cancelación sin datos, mostrar cancelado (no error)
+      if (isCancelled) {
+        paymentStatus.value = 'cancelled'
+      } else {
+        paymentStatus.value = 'error'
+        errorMessage.value = 'No se encontraron datos de la transaccion.'
+      }
       loading.value = false
       return
     }
 
-    // Si no hay parámetros, verificar localStorage
-    if (!id || !clientTransactionId) {
-      // Intentar recuperar datos de localStorage
-      const pendingPayment = localStorage.getItem('pending_payphone_payment')
-      if (!pendingPayment) {
-        paymentStatus.value = 'error'
-        errorMessage.value = 'No se encontraron datos de la transacción.'
-        loading.value = false
-        return
-      }
-    }
-
-    // Recuperar idOrden de localStorage
-    const pendingPayment = JSON.parse(localStorage.getItem('pending_payphone_payment') || '{}')
-
-    // Confirmar el pago con el backend (id debe ser número)
+    // Preparar datos para confirm
     const confirmData = {
-      id: parseInt(id),
-      clientTransactionId,
+      id: parseInt(id) || 0,
+      clientTransactionId: clientTransactionId || pendingPayment.clientTransactionId,
       idOrden: pendingPayment.orderId,
       idPaymentMethod: pendingPayment.idPaymentMethod
     }
 
-    const response = await paymentService.confirmPayPhonePayment(confirmData)
+    // Intentar llamar a confirm para que el backend procese el resultado
+    // (en cancelación el backend devuelve el stock)
+    let response = null
+    try {
+      response = await paymentService.confirmPayPhonePayment(confirmData)
+    } catch (confirmError) {
+      console.error('Error en confirm:', confirmError)
+      // Si fue cancelación y el confirm falla, igual mostrar cancelado
+      if (isCancelled) {
+        paymentStatus.value = 'cancelled'
+        localStorage.removeItem('pending_payphone_payment')
+        return
+      }
+      // Si no fue cancelación, sí es un error real
+      throw confirmError
+    }
 
-    // Verificar estado de la transacción
-    if (response.data && response.data.transactionStatus === 'Approved') {
+    if (isCancelled || response.success === false) {
+      paymentStatus.value = 'cancelled'
+      localStorage.removeItem('pending_payphone_payment')
+    } else if (response.success === true) {
       paymentStatus.value = 'success'
       paymentDetails.value = {
-        transactionId: response.data.transactionId || id,
-        amount: response.data.amount,
-        authorizationCode: response.data.authorizationCode,
-        cardBrand: response.data.cardBrand,
-        lastDigits: response.data.lastDigits
+        transactionId: response.data?.transactionId || id,
+        amount: response.data?.amount,
+        authorizationCode: response.data?.authorizationCode,
+        cardBrand: response.data?.cardBrand,
+        lastDigits: response.data?.lastDigits
       }
 
-      // Limpiar carrito y datos pendientes
       clearCart()
       localStorage.removeItem('pending_payphone_payment')
 
-      success('¡Pago exitoso!', 'Tu pedido ha sido procesado correctamente.')
-    } else if (response.data && response.data.transactionStatus === 'Canceled') {
-      paymentStatus.value = 'cancelled'
+      success('Pago exitoso', 'Tu pedido ha sido procesado correctamente.')
     } else {
       paymentStatus.value = 'error'
-      errorMessage.value = response.data?.message || 'La transacción no pudo ser completada.'
+      errorMessage.value = response.message || 'La transaccion no pudo ser completada.'
     }
 
   } catch (error) {
