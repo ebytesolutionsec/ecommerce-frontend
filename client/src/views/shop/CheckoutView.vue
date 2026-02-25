@@ -292,14 +292,53 @@
                       </div>
                       <div class="mt-3">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                          Número de comprobante *
+                          Numero de comprobante *
                         </label>
                         <input
                           v-model="transferInfo.referenceNumber"
                           type="text"
-                          placeholder="Ingrese el número de comprobante"
+                          placeholder="Ingrese el numero de comprobante"
                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
                         />
+                      </div>
+                      <div class="mt-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          Foto del comprobante *
+                        </label>
+                        <div
+                          class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-[#a3195b] transition"
+                          :class="transferInfo.receiptFile ? 'border-green-400 bg-green-50' : ''"
+                          @click="$refs.receiptInput.click()"
+                          @dragover.prevent
+                          @drop.prevent="handleFileDrop"
+                        >
+                          <input
+                            ref="receiptInput"
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            @change="handleFileSelect"
+                          />
+                          <div v-if="!receiptPreview">
+                            <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500">Haz clic o arrastra la imagen aqui</p>
+                            <p class="text-xs text-gray-400">PNG, JPG hasta 5MB</p>
+                          </div>
+                          <div v-else class="relative">
+                            <img :src="receiptPreview" alt="Comprobante" class="max-h-40 mx-auto rounded-lg" />
+                            <p class="mt-2 text-sm text-green-600 font-medium">{{ transferInfo.receiptFile.name }}</p>
+                          </div>
+                        </div>
+                        <button
+                          v-if="receiptPreview"
+                          type="button"
+                          @click="removeReceipt"
+                          class="mt-2 text-sm text-red-500 hover:text-red-700 transition"
+                        >
+                          Eliminar imagen
+                        </button>
                       </div>
                     </div>
                   </template>
@@ -470,7 +509,38 @@ const cardInfo = ref({
 // Información de transferencia
 const transferInfo = ref({
   referenceNumber: '',
+  receiptFile: null,
 })
+const receiptPreview = ref(null)
+
+// Manejo de archivo de comprobante
+const handleFileSelect = (event) => {
+  const file = event.target.files[0]
+  if (file) processReceiptFile(file)
+}
+
+const handleFileDrop = (event) => {
+  const file = event.dataTransfer.files[0]
+  if (file) processReceiptFile(file)
+}
+
+const processReceiptFile = (file) => {
+  if (!file.type.startsWith('image/')) {
+    showError('Error', 'Solo se permiten imagenes (PNG, JPG)')
+    return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showError('Error', 'La imagen no debe superar los 5MB')
+    return
+  }
+  transferInfo.value.receiptFile = file
+  receiptPreview.value = URL.createObjectURL(file)
+}
+
+const removeReceipt = () => {
+  transferInfo.value.receiptFile = null
+  receiptPreview.value = null
+}
 
 // Computed
 const getCurrentPrice = (item) => {
@@ -520,7 +590,11 @@ const handlePlaceOrder = async () => {
   // Validar campos según método de pago
   if (selectedMethod.provider === 'bank transfer') {
     if (!transferInfo.value.referenceNumber) {
-      showError('Error', 'Por favor ingresa el número de comprobante')
+      showError('Error', 'Por favor ingresa el numero de comprobante')
+      return
+    }
+    if (!transferInfo.value.receiptFile) {
+      showError('Error', 'Por favor sube la foto del comprobante de transferencia')
       return
     }
   }
