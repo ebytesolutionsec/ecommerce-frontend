@@ -148,6 +148,9 @@ const handleSubmit = async () => {
     // Guardar token en localStorage
     authService.setToken(response.token)
 
+    // Guardar datos del usuario para mostrar en el nav
+    authService.saveCurrentUser(response)
+
     // Marcar como autenticado en el composable
     login()
 

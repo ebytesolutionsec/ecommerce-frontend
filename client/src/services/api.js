@@ -1,4 +1,5 @@
 // Configuración base de la API
+//const API_BASE_URL = 'https://rzflw305-3000.use2.devtunnels.ms/api/v1'
 const API_BASE_URL = 'http://localhost:3000/api/v1'
 
 // Obtener token del localStorage

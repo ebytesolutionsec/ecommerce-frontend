@@ -36,6 +36,17 @@ export const authService = {
   removeToken: () => {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('isAuthenticated')
+    localStorage.removeItem('current_user')
+  },
+
+  // Guardar datos del usuario en localStorage
+  saveCurrentUser: (data) => {
+    const user = data?.user || data?.usuario || data?.data || data || {}
+    const fullName = user.fullName || user.nombreCompleto || user.nombre || user.name || ''
+    const email = user.email || user.correo || ''
+    if (fullName) {
+      localStorage.setItem('current_user', JSON.stringify({ fullName, email }))
+    }
   },
 
   // Verificar si el token es válido (existe y no ha expirado)
@@ -70,6 +81,28 @@ export const authService = {
   // Verificar si hay un token válido
   isAuthenticated: () => {
     return authService.isTokenValid()
+  },
+
+  // Obtener datos del usuario actual
+  getCurrentUser: () => {
+    const token = authService.getToken()
+    if (!token) return null
+    try {
+      // 1. Leer nombre guardado en localStorage (fuente más confiable)
+      const saved = localStorage.getItem('current_user')
+      const savedUser = saved ? JSON.parse(saved) : {}
+
+      // 2. Leer campos del token como respaldo
+      const decoded = jwtDecode(token)
+      const fullName = savedUser.fullName || decoded.fullName || decoded.nombreCompleto || decoded.nombre || decoded.name || ''
+      const email = savedUser.email || decoded.email || decoded.correo || ''
+      const role = decoded.rol || decoded.role || ''
+      const firstName = fullName.trim().split(' ')[0] || email.split('@')[0] || ''
+
+      return { fullName, email, role, firstName }
+    } catch {
+      return null
+    }
   },
 }
 

@@ -58,12 +58,15 @@
           <div class="relative" ref="accountDropdownRef">
             <button
               @click="toggleAccountDropdown"
-              class="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-[#a3195b] transition"
+              class="flex items-center space-x-2 px-3 py-2 hover:text-[#a3195b] transition"
+              :class="isAuthenticated && currentUser ? 'text-[#a3195b]' : 'text-gray-700'"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span class="hidden lg:block text-sm font-medium">Mi Cuenta</span>
+              <span class="hidden lg:block text-sm font-medium">
+                {{ isAuthenticated && currentUser?.firstName ? currentUser.firstName : 'Mi Cuenta' }}
+              </span>
             </button>
 
             <!-- Dropdown Mi Cuenta -->
@@ -81,6 +84,11 @@
               >
                 <!-- Opciones cuando está autenticado -->
                 <template v-if="isAuthenticated">
+                  <!-- Header del usuario -->
+                  <div v-if="currentUser?.fullName" class="px-4 py-3 border-b border-gray-100">
+                    <p class="text-sm font-semibold text-gray-900 truncate">{{ currentUser.fullName }}</p>
+                    <p v-if="currentUser.email" class="text-xs text-gray-500 truncate">{{ currentUser.email }}</p>
+                  </div>
                   <router-link
                     to="/mi-cuenta"
                     @click="closeAccountDropdown"
@@ -210,11 +218,40 @@ import { useCart } from '../../composables/useCart.js'
 import { useAuth } from '../../composables/useAuth.js'
 import { categoryService } from '../../services/categoryService.js'
 import authService from '../../services/authService.js'
+import userService from '../../services/userService.js'
 
 const router = useRouter()
 const route = useRoute()
 const { cartItemCount } = useCart()
 const { isAuthenticated, logout } = useAuth()
+
+// Datos del usuario actual (reactivo para actualizarse tras cargar el perfil)
+const currentUser = ref(null)
+
+const loadUserProfile = async () => {
+  if (!isAuthenticated.value) return
+  // Si ya hay nombre guardado en localStorage, usarlo directamente
+  const saved = authService.getCurrentUser()
+  if (saved?.firstName) {
+    currentUser.value = saved
+    return
+  }
+  // Si no hay nombre, buscar perfil por id del token
+  try {
+    const token = authService.getToken()
+    if (!token) return
+    const decoded = JSON.parse(atob(token.split('.')[1]))
+    if (!decoded?.id) return
+    const response = await userService.getById(decoded.id)
+    const user = response?.data || response?.usuario || response
+    if (user?.fullName) {
+      authService.saveCurrentUser({ user })
+      currentUser.value = authService.getCurrentUser()
+    }
+  } catch {
+    // Si falla la petición, dejar sin nombre (no es crítico)
+  }
+}
 
 // Estado
 const searchQuery = ref('')
@@ -254,7 +291,7 @@ const selectCategory = (category) => {
   if (category._id === 'all' || category.id === 'all') {
     router.push({ name: 'home' })
   } else {
-    router.push({ name: 'home', query: { category: category._id || category.id } })
+    router.push({ name: 'home', query: { category: category._id || category.id, cn: category.name } })
   }
   isMobileMenuOpen.value = false
 }
@@ -290,7 +327,7 @@ const handleClickOutside = (event) => {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
-  await loadCategories()
+  await Promise.all([loadCategories(), loadUserProfile()])
 
   // Sincronizar categoría seleccionada con la query de la URL
   if (route.query.category) {
