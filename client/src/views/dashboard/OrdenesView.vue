@@ -1,7 +1,7 @@
 <template>
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-3xl font-bold text-gray-800">Órdenes</h2>
+      <h2 class="text-3xl font-bold text-gray-800">Ordenes</h2>
       <button
         @click="loadOrders"
         class="px-4 py-2 bg-gradient-to-r from-[#a3195b] to-[#662482] text-white rounded-lg hover:opacity-90 transition"
@@ -13,7 +13,7 @@
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center items-center py-20">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#a3195b]"></div>
-      <span class="ml-3 text-gray-600">Cargando órdenes...</span>
+      <span class="ml-3 text-gray-600">Cargando ordenes...</span>
     </div>
 
     <!-- Error -->
@@ -21,10 +21,10 @@
       {{ error }}
     </div>
 
-    <!-- Tabla de Órdenes -->
+    <!-- Tabla de Ordenes -->
     <div v-else class="bg-white rounded-lg shadow-md overflow-hidden">
       <div v-if="ordenes.length === 0" class="text-center py-12 text-gray-500">
-        No hay órdenes registradas
+        No hay ordenes registradas
       </div>
 
       <div v-else class="overflow-x-auto">
@@ -32,7 +32,7 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID Orden
+                N. Orden
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Cliente
@@ -55,26 +55,27 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="orden in ordenes" :key="orden._id || orden.id" class="hover:bg-gray-50 transition">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                {{ formatOrderId(orden._id || orden.id) }}
+            <tr v-for="orden in ordenes" :key="orden._id" class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-semibold text-gray-900">{{ orden.order_number || formatId(orden._id) }}</div>
+                <div class="text-xs font-mono text-gray-400">{{ formatId(orden._id) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ orden.usuario?.fullName || 'N/A' }}</div>
-                <div class="text-sm text-gray-500">{{ orden.usuario?.email || '' }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ orden.userId?.fullName || 'N/A' }}</div>
+                <div class="text-sm text-gray-500">{{ orden.userId?.email || '' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ orden.items?.length || 0 }} producto(s)
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                ${{ formatPrice(orden.total || 0) }}
+                ${{ formatPrice(orden.total) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="getStatusClass(orden.estado)"
+                  :class="getStatusClass(orden.status)"
                 >
-                  {{ getStatusLabel(orden.estado) }}
+                  {{ getStatusLabel(orden.status) }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -117,8 +118,9 @@
             <div class="flex justify-between items-start mb-6">
               <div>
                 <h3 class="text-2xl font-bold text-gray-900">Detalles de la Orden</h3>
-                <p class="text-sm text-gray-500 font-mono mt-1">
-                  ID: {{ formatOrderId(selectedOrder._id || selectedOrder.id) }}
+                <p class="text-sm text-gray-500 mt-1">
+                  <span class="font-semibold">{{ selectedOrder.order_number }}</span>
+                  <span class="font-mono ml-2">{{ formatId(selectedOrder._id) }}</span>
                 </p>
               </div>
               <button
@@ -131,25 +133,27 @@
               </button>
             </div>
 
-            <!-- Información del Cliente -->
+            <!-- Informacion del Cliente -->
             <div class="mb-6">
-              <h4 class="text-lg font-semibold text-gray-900 mb-3">Información del Cliente</h4>
+              <h4 class="text-lg font-semibold text-gray-900 mb-3">Informacion del Cliente</h4>
               <div class="bg-gray-50 rounded-lg p-4 space-y-2">
                 <div class="flex justify-between">
                   <span class="text-gray-600">Nombre:</span>
-                  <span class="font-medium text-gray-900">{{ selectedOrder.usuario?.fullName || 'N/A' }}</span>
+                  <span class="font-medium text-gray-900">{{ selectedOrder.userId?.fullName || 'N/A' }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-gray-600">Email:</span>
-                  <span class="font-medium text-gray-900">{{ selectedOrder.usuario?.email || 'N/A' }}</span>
+                  <span class="font-medium text-gray-900">{{ selectedOrder.userId?.email || 'N/A' }}</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-600">Teléfono:</span>
-                  <span class="font-medium text-gray-900">{{ selectedOrder.usuario?.phone || 'N/A' }}</span>
+                  <span class="text-gray-600">Telefono:</span>
+                  <span class="font-medium text-gray-900">{{ selectedOrder.userId?.phone || 'N/A' }}</span>
                 </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600">Dirección:</span>
-                  <span class="font-medium text-gray-900">{{ selectedOrder.usuario?.direccion || 'N/A' }}</span>
+                <div v-if="selectedOrder.shipping_address" class="flex justify-between">
+                  <span class="text-gray-600">Direccion de envio:</span>
+                  <span class="font-medium text-gray-900">
+                    {{ formatShippingAddress(selectedOrder.shipping_address) }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -164,14 +168,15 @@
                   class="flex items-center justify-between bg-gray-50 rounded-lg p-4"
                 >
                   <div class="flex-1">
-                    <p class="font-medium text-gray-900">{{ item.producto?.name || 'Producto' }}</p>
-                    <p class="text-sm text-gray-500">Cantidad: {{ item.cantidad }}</p>
+                    <p class="font-medium text-gray-900">{{ item.product_name || item.product?.name || 'Producto' }}</p>
+                    <p class="text-sm text-gray-500">Cantidad: {{ item.quantity }}</p>
+                    <p v-if="item.product_sku" class="text-xs text-gray-400">SKU: {{ item.product_sku }}</p>
                   </div>
                   <div class="text-right">
                     <p class="font-semibold text-gray-900">
-                      ${{ formatPrice(item.precio * item.cantidad) }}
+                      ${{ formatPrice(item.total_price) }}
                     </p>
-                    <p class="text-sm text-gray-500">${{ formatPrice(item.precio) }} c/u</p>
+                    <p class="text-sm text-gray-500">${{ formatPrice(item.unit_price) }} c/u</p>
                   </div>
                 </div>
               </div>
@@ -181,15 +186,19 @@
             <div class="border-t border-gray-200 pt-4">
               <div class="flex justify-between items-center mb-2">
                 <span class="text-gray-600">Subtotal:</span>
-                <span class="font-medium text-gray-900">${{ formatPrice(selectedOrder.total || 0) }}</span>
+                <span class="font-medium text-gray-900">${{ formatPrice(selectedOrder.subtotal) }}</span>
+              </div>
+              <div v-if="selectedOrder.tax" class="flex justify-between items-center mb-2">
+                <span class="text-gray-600">IVA (12%):</span>
+                <span class="font-medium text-gray-900">${{ formatPrice(selectedOrder.tax) }}</span>
               </div>
               <div class="flex justify-between items-center mb-2">
-                <span class="text-gray-600">Envío:</span>
-                <span class="font-medium text-green-600">Gratis</span>
+                <span class="text-gray-600">Envio:</span>
+                <span class="font-medium text-green-600">{{ selectedOrder.shipping_cost > 0 ? '$' + formatPrice(selectedOrder.shipping_cost) : 'Gratis' }}</span>
               </div>
               <div class="flex justify-between items-center text-lg font-bold border-t border-gray-200 pt-2 mt-2">
                 <span class="text-gray-900">Total:</span>
-                <span class="text-[#a3195b]">${{ formatPrice(selectedOrder.total || 0) }}</span>
+                <span class="text-[#a3195b]">${{ formatPrice(selectedOrder.total) }}</span>
               </div>
             </div>
 
@@ -199,13 +208,13 @@
                 <p class="text-sm text-gray-600">Estado:</p>
                 <span
                   class="inline-flex mt-1 px-3 py-1 text-sm font-semibold rounded-full"
-                  :class="getStatusClass(selectedOrder.estado)"
+                  :class="getStatusClass(selectedOrder.status)"
                 >
-                  {{ getStatusLabel(selectedOrder.estado) }}
+                  {{ getStatusLabel(selectedOrder.status) }}
                 </span>
               </div>
               <div class="text-right">
-                <p class="text-sm text-gray-600">Fecha de creación:</p>
+                <p class="text-sm text-gray-600">Fecha de creacion:</p>
                 <p class="text-sm font-medium text-gray-900 mt-1">{{ formatDate(selectedOrder.createdAt) }}</p>
               </div>
             </div>
@@ -229,7 +238,7 @@ const loading = ref(false)
 const error = ref(null)
 const selectedOrder = ref(null)
 
-// Cargar órdenes
+// Cargar ordenes
 const loadOrders = async () => {
   loading.value = true
   error.value = null
@@ -238,9 +247,9 @@ const loadOrders = async () => {
     const response = await orderService.listAll()
     ordenes.value = response.data || []
   } catch (err) {
-    console.error('Error al cargar órdenes:', err)
-    error.value = err.message || 'Error al cargar las órdenes'
-    showError('Error', 'No se pudieron cargar las órdenes')
+    console.error('Error al cargar ordenes:', err)
+    error.value = err.message || 'Error al cargar las ordenes'
+    showError('Error', 'No se pudieron cargar las ordenes')
   } finally {
     loading.value = false
   }
@@ -256,10 +265,10 @@ const closeModal = () => {
   selectedOrder.value = null
 }
 
-// Formatear ID de orden
-const formatOrderId = (id) => {
+// Formatear ID
+const formatId = (id) => {
   if (!id) return 'N/A'
-  return id.substring(0, 8).toUpperCase()
+  return String(id).substring(0, 8).toUpperCase()
 }
 
 // Formatear precio
@@ -279,28 +288,36 @@ const formatDate = (date) => {
   })
 }
 
+// Formatear direccion de envio
+const formatShippingAddress = (address) => {
+  if (!address) return 'N/A'
+  if (typeof address === 'string') return address
+  const parts = [address.address, address.city, address.country, address.zip].filter(Boolean)
+  return parts.join(', ') || 'N/A'
+}
+
 // Obtener clase de estado
-const getStatusClass = (estado) => {
+const getStatusClass = (status) => {
   const classes = {
-    pendiente: 'bg-yellow-100 text-yellow-800',
-    procesando: 'bg-blue-100 text-blue-800',
-    enviado: 'bg-purple-100 text-purple-800',
-    entregado: 'bg-green-100 text-green-800',
-    cancelado: 'bg-red-100 text-red-800'
+    pending: 'bg-yellow-100 text-yellow-800',
+    paid: 'bg-green-100 text-green-800',
+    shipped: 'bg-blue-100 text-blue-800',
+    completed: 'bg-emerald-100 text-emerald-800',
+    canceled: 'bg-red-100 text-red-800'
   }
-  return classes[estado] || 'bg-gray-100 text-gray-800'
+  return classes[status] || 'bg-gray-100 text-gray-800'
 }
 
 // Obtener etiqueta de estado
-const getStatusLabel = (estado) => {
+const getStatusLabel = (status) => {
   const labels = {
-    pendiente: 'Pendiente',
-    procesando: 'Procesando',
-    enviado: 'Enviado',
-    entregado: 'Entregado',
-    cancelado: 'Cancelado'
+    pending: 'Pendiente',
+    paid: 'Pagada',
+    shipped: 'Enviada',
+    completed: 'Completada',
+    canceled: 'Cancelada'
   }
-  return labels[estado] || estado || 'N/A'
+  return labels[status] || status || 'N/A'
 }
 
 // Lifecycle

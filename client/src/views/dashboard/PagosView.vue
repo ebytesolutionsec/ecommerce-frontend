@@ -35,7 +35,7 @@
                 ID Pago
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID Orden
+                Orden
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Monto
@@ -58,22 +58,25 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="pago in pagos" :key="pago._id || pago.id" class="hover:bg-gray-50 transition">
+            <tr v-for="pago in pagos" :key="pago._id" class="hover:bg-gray-50 transition">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                {{ formatId(pago._id || pago.id) }}
+                {{ formatId(pago._id) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">
-                {{ formatId(pago.orden_id || pago.orden) }}
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-mono text-gray-900">{{ formatId(getOrderId(pago)) }}</div>
+                <div v-if="pago.order?.order_number" class="text-xs text-gray-500">
+                  #{{ pago.order.order_number }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                ${{ formatPrice(pago.monto || 0) }}
+                ${{ formatPrice(pago.amount) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="getMethodClass(pago.payment_method_id)"
+                  :class="getMethodClass(pago.payment_method)"
                 >
-                  {{ getMethodLabel(pago.payment_method_id) }}
+                  {{ getMethodLabel(pago.payment_method) }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">
@@ -82,9 +85,9 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="getStatusClass(pago.estado)"
+                  :class="getStatusClass(pago.status)"
                 >
-                  {{ getStatusLabel(pago.estado) }}
+                  {{ getStatusLabel(pago.status) }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -128,7 +131,7 @@
               <div>
                 <h3 class="text-2xl font-bold text-gray-900">Detalles del Pago</h3>
                 <p class="text-sm text-gray-500 font-mono mt-1">
-                  ID: {{ formatId(selectedPayment._id || selectedPayment.id) }}
+                  ID: {{ formatId(selectedPayment._id) }}
                 </p>
               </div>
               <button
@@ -141,70 +144,94 @@
               </button>
             </div>
 
-            <!-- Información del Pago -->
-            <div class="space-y-4">
-              <!-- Orden asociada -->
-              <div class="bg-gray-50 rounded-lg p-4">
-                <h4 class="text-sm font-semibold text-gray-700 mb-3">Orden Asociada</h4>
-                <div class="space-y-2">
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">ID Orden:</span>
-                    <span class="text-sm font-mono font-medium text-gray-900">
-                      {{ formatId(selectedPayment.orden_id || selectedPayment.orden) }}
-                    </span>
-                  </div>
+            <!-- Orden Asociada -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+              <h4 class="text-sm font-semibold text-gray-700 mb-3">Orden Asociada</h4>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">ID Orden:</span>
+                  <span class="text-sm font-mono font-medium text-gray-900">
+                    {{ formatId(getOrderId(selectedPayment)) }}
+                  </span>
+                </div>
+                <div v-if="selectedPayment.order?.order_number" class="flex justify-between">
+                  <span class="text-sm text-gray-600">N. Orden:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    #{{ selectedPayment.order.order_number }}
+                  </span>
+                </div>
+                <div v-if="selectedPayment.order?.status" class="flex justify-between">
+                  <span class="text-sm text-gray-600">Estado Orden:</span>
+                  <span
+                    class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    :class="getOrderStatusClass(selectedPayment.order.status)"
+                  >
+                    {{ getOrderStatusLabel(selectedPayment.order.status) }}
+                  </span>
+                </div>
+                <div v-if="selectedPayment.order?.total" class="flex justify-between">
+                  <span class="text-sm text-gray-600">Total Orden:</span>
+                  <span class="text-sm font-semibold text-gray-900">
+                    ${{ formatPrice(selectedPayment.order.total) }}
+                  </span>
+                </div>
+                <div v-if="selectedPayment.order?.userId?.fullName" class="flex justify-between">
+                  <span class="text-sm text-gray-600">Cliente:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ selectedPayment.order.userId.fullName }}
+                  </span>
                 </div>
               </div>
+            </div>
 
-              <!-- Detalles del Pago -->
-              <div class="bg-gray-50 rounded-lg p-4">
-                <h4 class="text-sm font-semibold text-gray-700 mb-3">Información del Pago</h4>
-                <div class="space-y-2">
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Monto:</span>
-                    <span class="text-lg font-bold text-[#a3195b]">
-                      ${{ formatPrice(selectedPayment.monto || 0) }}
-                    </span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Método de Pago:</span>
-                    <span
-                      class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      :class="getMethodClass(selectedPayment.payment_method_id)"
-                    >
-                      {{ getMethodLabel(selectedPayment.payment_method_id) }}
-                    </span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">ID Transacción:</span>
-                    <span class="text-sm font-mono font-medium text-gray-900">
-                      {{ selectedPayment.transaction_id || 'N/A' }}
-                    </span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Estado:</span>
-                    <span
-                      class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      :class="getStatusClass(selectedPayment.estado)"
-                    >
-                      {{ getStatusLabel(selectedPayment.estado) }}
-                    </span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Fecha:</span>
-                    <span class="text-sm font-medium text-gray-900">
-                      {{ formatDate(selectedPayment.createdAt) }}
-                    </span>
-                  </div>
+            <!-- Detalles del Pago -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+              <h4 class="text-sm font-semibold text-gray-700 mb-3">Informacion del Pago</h4>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Monto:</span>
+                  <span class="text-lg font-bold text-[#a3195b]">
+                    ${{ formatPrice(selectedPayment.amount) }}
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Metodo de Pago:</span>
+                  <span
+                    class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    :class="getMethodClass(selectedPayment.payment_method)"
+                  >
+                    {{ getMethodLabel(selectedPayment.payment_method) }}
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">ID Transaccion:</span>
+                  <span class="text-sm font-mono font-medium text-gray-900">
+                    {{ selectedPayment.transaction_id || 'N/A' }}
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Estado:</span>
+                  <span
+                    class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    :class="getStatusClass(selectedPayment.status)"
+                  >
+                    {{ getStatusLabel(selectedPayment.status) }}
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-sm text-gray-600">Fecha de Pago:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ formatDate(selectedPayment.paid_at || selectedPayment.createdAt) }}
+                  </span>
                 </div>
               </div>
+            </div>
 
-              <!-- Respuesta del Proveedor -->
-              <div v-if="selectedPayment.provider_response" class="bg-gray-50 rounded-lg p-4">
-                <h4 class="text-sm font-semibold text-gray-700 mb-3">Respuesta del Proveedor</h4>
-                <div class="bg-white rounded border border-gray-200 p-3">
-                  <pre class="text-xs text-gray-700 whitespace-pre-wrap">{{ formatJSON(selectedPayment.provider_response) }}</pre>
-                </div>
+            <!-- Respuesta del Proveedor -->
+            <div v-if="selectedPayment.provider_response" class="bg-gray-50 rounded-lg p-4">
+              <h4 class="text-sm font-semibold text-gray-700 mb-3">Respuesta del Proveedor</h4>
+              <div class="bg-white rounded border border-gray-200 p-3">
+                <pre class="text-xs text-gray-700 whitespace-pre-wrap">{{ formatJSON(selectedPayment.provider_response) }}</pre>
               </div>
             </div>
           </div>
@@ -254,15 +281,25 @@ const closeModal = () => {
   selectedPayment.value = null
 }
 
+// Obtener ID de la orden (puede ser objeto populado o string)
+const getOrderId = (pago) => {
+  if (!pago.order) return null
+  return typeof pago.order === 'object' ? pago.order._id : pago.order
+}
+
 // Formatear ID
 const formatId = (id) => {
   if (!id) return 'N/A'
-  return id.substring(0, 8).toUpperCase()
+  return String(id).substring(0, 8).toUpperCase()
 }
 
 // Formatear precio
 const formatPrice = (price) => {
-  return Number(price || 0).toFixed(2)
+  if (!price) return '0.00'
+  const num = typeof price === 'object' && price.$numberDecimal
+    ? parseFloat(price.$numberDecimal)
+    : Number(price)
+  return num.toFixed(2)
 }
 
 // Formatear fecha
@@ -286,48 +323,66 @@ const formatJSON = (obj) => {
   }
 }
 
-// Obtener clase de método
+// Obtener clase de metodo de pago
 const getMethodClass = (method) => {
-  const classes = {
-    CARD: 'bg-blue-100 text-blue-800',
-    TRANSFER: 'bg-green-100 text-green-800',
-    CASH: 'bg-yellow-100 text-yellow-800'
-  }
-  return classes[method] || 'bg-gray-100 text-gray-800'
+  if (!method) return 'bg-gray-100 text-gray-800'
+  const name = typeof method === 'object' ? (method.provider || method.name || '') : String(method)
+  const lower = name.toLowerCase()
+  if (lower.includes('card') || lower.includes('payphone') || lower.includes('tarjeta')) return 'bg-blue-100 text-blue-800'
+  if (lower.includes('transfer') || lower.includes('bancaria')) return 'bg-green-100 text-green-800'
+  return 'bg-gray-100 text-gray-800'
 }
 
-// Obtener etiqueta de método
+// Obtener etiqueta de metodo de pago
 const getMethodLabel = (method) => {
-  const labels = {
-    CARD: 'Tarjeta',
-    TRANSFER: 'Transferencia',
-    CASH: 'Efectivo'
-  }
-  return labels[method] || method || 'N/A'
+  if (!method) return 'N/A'
+  if (typeof method === 'object') return method.name || method.provider || 'N/A'
+  return String(method).substring(0, 8)
 }
 
-// Obtener clase de estado
-const getStatusClass = (estado) => {
+// Obtener clase de estado de pago
+const getStatusClass = (status) => {
   const classes = {
-    pendiente: 'bg-yellow-100 text-yellow-800',
-    procesando: 'bg-blue-100 text-blue-800',
-    completado: 'bg-green-100 text-green-800',
-    fallido: 'bg-red-100 text-red-800',
-    reembolsado: 'bg-purple-100 text-purple-800'
+    pending: 'bg-yellow-100 text-yellow-800',
+    approved: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800',
+    refunded: 'bg-purple-100 text-purple-800'
   }
-  return classes[estado] || 'bg-gray-100 text-gray-800'
+  return classes[status] || 'bg-gray-100 text-gray-800'
 }
 
-// Obtener etiqueta de estado
-const getStatusLabel = (estado) => {
+// Obtener etiqueta de estado de pago
+const getStatusLabel = (status) => {
   const labels = {
-    pendiente: 'Pendiente',
-    procesando: 'Procesando',
-    completado: 'Completado',
-    fallido: 'Fallido',
-    reembolsado: 'Reembolsado'
+    pending: 'Pendiente',
+    approved: 'Aprobado',
+    rejected: 'Rechazado',
+    refunded: 'Reembolsado'
   }
-  return labels[estado] || estado || 'N/A'
+  return labels[status] || status || 'N/A'
+}
+
+// Estado de la orden
+const getOrderStatusClass = (status) => {
+  const classes = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    paid: 'bg-green-100 text-green-800',
+    canceled: 'bg-red-100 text-red-800',
+    shipped: 'bg-blue-100 text-blue-800',
+    delivered: 'bg-emerald-100 text-emerald-800'
+  }
+  return classes[status] || 'bg-gray-100 text-gray-800'
+}
+
+const getOrderStatusLabel = (status) => {
+  const labels = {
+    pending: 'Pendiente',
+    paid: 'Pagada',
+    canceled: 'Cancelada',
+    shipped: 'Enviada',
+    delivered: 'Entregada'
+  }
+  return labels[status] || status || 'N/A'
 }
 
 // Lifecycle
