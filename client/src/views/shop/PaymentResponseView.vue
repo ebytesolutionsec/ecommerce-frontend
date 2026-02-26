@@ -171,8 +171,9 @@ const processPayPhoneResponse = async () => {
     }
 
     // Preparar datos para confirm
+    // id debe enviarse como string (el backend valida con !id, y !"0" === false, mientras que !0 === true)
     const confirmData = {
-      id: parseInt(id) || 0,
+      id: id ?? "0",
       clientTransactionId: clientTransactionId || pendingPayment.clientTransactionId,
       idOrden,
       idPaymentMethod: pendingPayment.idPaymentMethod
