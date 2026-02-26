@@ -185,14 +185,15 @@ const processPayPhoneResponse = async () => {
     try {
       response = await paymentService.confirmPayPhonePayment(confirmData)
     } catch (confirmError) {
-      console.error('Error en confirm:', confirmError)
-      // Si fue cancelación y el confirm falla, igual mostrar cancelado
+      // Si fue cancelación, el backend puede devolver error (esperado) — solo avisar
       if (isCancelled) {
+        console.warn('Confirm devolvió error en cancelación (esperado):', confirmError.message)
         paymentStatus.value = 'cancelled'
         localStorage.removeItem('pending_payphone_payment')
         return
       }
       // Si no fue cancelación, sí es un error real
+      console.error('Error en confirm:', confirmError)
       throw confirmError
     }
 
