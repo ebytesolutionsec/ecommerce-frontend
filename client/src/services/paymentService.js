@@ -23,8 +23,8 @@ export const paymentService = {
   },
 
   // Listar métodos de pago disponibles
-  listPaymentMethods: async () => {
-    return api.get('/payment/method/list')
+  listPaymentMethods: async (page = 1, limit = 100) => {
+    return api.get(`/payment/method/list?page=${page}&limit=${limit}`)
   },
 
   // Obtener método de pago específico

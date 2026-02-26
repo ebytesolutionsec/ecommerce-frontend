@@ -1,7 +1,13 @@
 <template>
   <div class="p-6">
+    <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-3xl font-bold text-gray-800">Metodos de Pago</h2>
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">Métodos de Pago</h2>
+        <p v-if="!loading && !error" class="text-sm text-gray-500 mt-1">
+          {{ filteredMethods.length }} de {{ methods.length }} método(s)
+        </p>
+      </div>
       <button
         @click="openModal()"
         class="px-4 py-2 bg-gradient-to-r from-[#a3195b] to-[#662482] text-white rounded-lg hover:opacity-90 transition flex items-center gap-2"
@@ -9,35 +15,52 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
-        Nuevo Metodo
+        Nuevo Método
+      </button>
+    </div>
+
+    <!-- Filtros -->
+    <div v-if="!loading && !error && methods.length > 0" class="flex flex-wrap gap-2 mb-5">
+      <button
+        v-for="opt in filterOptions"
+        :key="opt.value"
+        @click="filterProvider = opt.value"
+        class="px-3 py-1.5 rounded-full text-sm font-medium transition"
+        :class="filterProvider === opt.value
+          ? 'bg-gradient-to-r from-[#a3195b] to-[#662482] text-white shadow-sm'
+          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+      >
+        {{ opt.label }}
+        <span class="ml-1 text-xs opacity-70">({{ opt.count }})</span>
       </button>
     </div>
 
     <!-- Loading -->
-    <LoadingSpinner v-if="loading" message="Cargando metodos de pago..." />
+    <LoadingSpinner v-if="loading" message="Cargando métodos de pago..." />
 
     <!-- Error -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
       {{ error }}
     </div>
 
-    <!-- Lista de metodos de pago -->
+    <!-- Lista -->
     <div v-else>
-      <div v-if="methods.length === 0" class="text-center py-12 text-gray-500 bg-white rounded-lg shadow-md">
-        No hay metodos de pago registrados
+      <div v-if="filteredMethods.length === 0" class="text-center py-12 text-gray-500 bg-white rounded-lg shadow-md">
+        {{ methods.length === 0 ? 'No hay métodos de pago registrados' : 'No hay métodos que coincidan con el filtro' }}
       </div>
 
       <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
-          v-for="method in methods"
+          v-for="method in filteredMethods"
           :key="method._id"
           class="bg-white rounded-lg shadow-md p-5 border-l-4 transition hover:shadow-lg"
           :class="method.active ? 'border-green-500' : 'border-gray-300'"
         >
+          <!-- Header tarjeta -->
           <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
               <div
-                class="w-10 h-10 rounded-full flex items-center justify-center"
+                class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                 :class="getProviderIconClass(method.provider)"
               >
                 <svg v-if="isCardProvider(method.provider)" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,25 +75,36 @@
                 <p class="text-xs text-gray-500">{{ method.provider }}</p>
               </div>
             </div>
-            <span
-              class="px-2 py-1 text-xs font-semibold rounded-full"
-              :class="method.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'"
+
+            <!-- Toggle activo/inactivo -->
+            <button
+              @click="toggleActive(method)"
+              :disabled="togglingId === method._id"
+              class="px-2 py-1 text-xs font-semibold rounded-full transition flex items-center gap-1"
+              :class="method.active
+                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+              :title="method.active ? 'Click para desactivar' : 'Click para activar'"
             >
-              {{ method.active ? 'Activo' : 'Inactivo' }}
-            </span>
+              <svg v-if="togglingId === method._id" class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span>{{ method.active ? 'Activo' : 'Inactivo' }}</span>
+            </button>
           </div>
 
           <!-- Config de transferencia -->
-          <div v-if="method.config && isTransferProvider(method.provider)" class="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
-            <p v-if="method.config.banco"><span class="text-gray-500">Banco:</span> {{ method.config.banco }}</p>
-            <p v-if="method.config.tipoCuenta"><span class="text-gray-500">Cuenta:</span> {{ method.config.tipoCuenta }}</p>
-            <p v-if="method.config.numeroCuenta"><span class="text-gray-500">N.:</span> {{ method.config.numeroCuenta }}</p>
+          <div v-if="method.config && isTransferProvider(method.provider)" class="bg-gray-50 rounded-lg p-3 text-sm space-y-1 mb-3">
+            <p v-if="method.config.banco"><span class="text-gray-500">Banco:</span> <strong>{{ method.config.banco }}</strong></p>
+            <p v-if="method.config.tipoCuenta"><span class="text-gray-500">Tipo:</span> {{ method.config.tipoCuenta }}</p>
+            <p v-if="method.config.numeroCuenta"><span class="text-gray-500">N° Cuenta:</span> <strong>{{ method.config.numeroCuenta }}</strong></p>
             <p v-if="method.config.beneficiario"><span class="text-gray-500">Beneficiario:</span> {{ method.config.beneficiario }}</p>
             <p v-if="method.config.ruc"><span class="text-gray-500">RUC:</span> {{ method.config.ruc }}</p>
           </div>
 
           <!-- Acciones -->
-          <div class="mt-4 flex items-center justify-between">
+          <div class="flex items-center justify-between">
             <span class="text-xs text-gray-400">{{ formatDate(method.createdAt) }}</span>
             <div class="flex gap-2">
               <button
@@ -97,17 +131,16 @@
       </div>
     </div>
 
-    <!-- Modal Crear/Editar Metodo de Pago -->
+    <!-- Modal Crear/Editar -->
     <Modal
       :show="showModal"
-      :title="isEditing ? 'Editar Metodo de Pago' : 'Nuevo Metodo de Pago'"
-      :confirm-text="isEditing ? 'Guardar Cambios' : 'Crear Metodo'"
+      :title="isEditing ? 'Editar Método de Pago' : 'Nuevo Método de Pago'"
+      :confirm-text="isEditing ? 'Guardar Cambios' : 'Crear Método'"
       :loading="submitting"
       @close="closeModal"
       @confirm="submitForm"
     >
       <form ref="formRef" @submit.prevent="handleSubmit" class="space-y-4">
-        <!-- Nombre -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
           <input
@@ -119,7 +152,6 @@
           />
         </div>
 
-        <!-- Proveedor -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Proveedor *</label>
           <select
@@ -133,7 +165,6 @@
           </select>
         </div>
 
-        <!-- Estado -->
         <div class="flex items-center gap-2">
           <input
             v-model="form.active"
@@ -144,7 +175,6 @@
           <label for="active" class="text-sm font-medium text-gray-700">Activo</label>
         </div>
 
-        <!-- Formulario de transferencia -->
         <transition
           enter-active-class="transition ease-out duration-200"
           enter-from-class="opacity-0 -translate-y-2"
@@ -181,7 +211,7 @@
                 </select>
               </div>
               <div>
-                <label class="block text-sm text-gray-600 mb-1">N. de Cuenta *</label>
+                <label class="block text-sm text-gray-600 mb-1">N° de Cuenta *</label>
                 <input
                   v-model="form.config.numeroCuenta"
                   type="text"
@@ -204,7 +234,7 @@
             </div>
 
             <div>
-              <label class="block text-sm text-gray-600 mb-1">RUC / Cedula *</label>
+              <label class="block text-sm text-gray-600 mb-1">RUC / Cédula *</label>
               <input
                 v-model="form.config.ruc"
                 type="text"
@@ -216,22 +246,21 @@
           </div>
         </transition>
 
-        <!-- Submit oculto para activar validación nativa del formulario -->
         <button type="submit" class="hidden"></button>
       </form>
     </Modal>
 
-    <!-- Modal Confirmar Eliminacion -->
+    <!-- Modal Confirmar Eliminación -->
     <Modal
       :show="showDeleteModal"
-      title="Eliminar Metodo de Pago"
+      title="Eliminar Método de Pago"
       confirm-text="Eliminar"
       :loading="deleting"
       @close="showDeleteModal = false"
       @confirm="handleDelete"
     >
-      <p class="text-gray-600">Estas seguro de que deseas eliminar <strong>{{ methodToDelete?.name }}</strong>?</p>
-      <p class="text-sm text-red-600 mt-2">Esta accion no se puede deshacer.</p>
+      <p class="text-gray-600">¿Estás seguro de que deseas eliminar <strong>{{ methodToDelete?.name }}</strong>?</p>
+      <p class="text-sm text-red-600 mt-2">Esta acción no se puede deshacer.</p>
     </Modal>
   </div>
 </template>
@@ -256,42 +285,75 @@ const deleting = ref(false)
 const editingId = ref(null)
 const methodToDelete = ref(null)
 const formRef = ref(null)
-
-// Disparar submit del formulario desde el botón del Modal
-const submitForm = () => {
-  formRef.value?.requestSubmit()
-}
+const togglingId = ref(null)
+const filterProvider = ref('')
 
 const isEditing = computed(() => !!editingId.value)
+
+// Opciones de filtro con conteos
+const filterOptions = computed(() => [
+  { value: '', label: 'Todos', count: methods.value.length },
+  {
+    value: 'card payment',
+    label: 'Tarjeta',
+    count: methods.value.filter(m => isCardProvider(m.provider)).length
+  },
+  {
+    value: 'bank transfer',
+    label: 'Transferencia',
+    count: methods.value.filter(m => isTransferProvider(m.provider)).length
+  },
+])
+
+// Métodos filtrados
+const filteredMethods = computed(() => {
+  if (!filterProvider.value) return methods.value
+  if (filterProvider.value === 'card payment') return methods.value.filter(m => isCardProvider(m.provider))
+  if (filterProvider.value === 'bank transfer') return methods.value.filter(m => isTransferProvider(m.provider))
+  return methods.value
+})
 
 // Formulario
 const defaultForm = () => ({
   name: '',
   provider: '',
   active: true,
-  config: {
-    banco: '',
-    tipoCuenta: '',
-    numeroCuenta: '',
-    beneficiario: '',
-    ruc: ''
-  }
+  config: { banco: '', tipoCuenta: '', numeroCuenta: '', beneficiario: '', ruc: '' }
 })
 
 const form = ref(defaultForm())
 
-// Cargar metodos
+const submitForm = () => formRef.value?.requestSubmit()
+
+// Cargar métodos
 const loadMethods = async () => {
   loading.value = true
   error.value = null
   try {
     const response = await paymentService.listPaymentMethods()
-    methods.value = response.data || response.methods || (Array.isArray(response) ? response : [])
+    methods.value = response.data || []
   } catch (err) {
-    console.error('Error al cargar metodos de pago:', err)
-    error.value = err.message || 'Error al cargar los metodos de pago'
+    console.error('Error al cargar métodos de pago:', err)
+    error.value = err.message || 'Error al cargar los métodos de pago'
   } finally {
     loading.value = false
+  }
+}
+
+// Toggle activo/inactivo sin abrir modal
+const toggleActive = async (method) => {
+  togglingId.value = method._id
+  try {
+    await paymentService.updatePaymentMethod(method._id, { active: !method.active })
+    method.active = !method.active
+    success(
+      method.active ? 'Método activado' : 'Método desactivado',
+      `"${method.name}" fue ${method.active ? 'activado' : 'desactivado'} correctamente`
+    )
+  } catch (err) {
+    showError('Error', err.message || 'No se pudo cambiar el estado')
+  } finally {
+    togglingId.value = null
   }
 }
 
@@ -318,7 +380,6 @@ const openModal = (method = null) => {
   showModal.value = true
 }
 
-// Cerrar modal
 const closeModal = () => {
   showModal.value = false
   editingId.value = null
@@ -341,23 +402,22 @@ const handleSubmit = async () => {
 
     if (isEditing.value) {
       await paymentService.updatePaymentMethod(editingId.value, payload)
-      success('Metodo actualizado', 'Los cambios se guardaron correctamente')
+      success('Método actualizado', 'Los cambios se guardaron correctamente')
     } else {
       await paymentService.createPaymentMethod(payload)
-      success('Metodo creado', 'El metodo de pago se creo correctamente')
+      success('Método creado', 'El método de pago se creó correctamente')
     }
 
     closeModal()
     loadMethods()
   } catch (err) {
-    console.error('Error al guardar metodo de pago:', err)
-    showError('Error', err.message || 'No se pudo guardar el metodo de pago')
+    showError('Error', err.message || 'No se pudo guardar el método de pago')
   } finally {
     submitting.value = false
   }
 }
 
-// Confirmar eliminacion
+// Confirmar eliminación
 const confirmDelete = (method) => {
   methodToDelete.value = method
   showDeleteModal.value = true
@@ -368,13 +428,12 @@ const handleDelete = async () => {
   deleting.value = true
   try {
     await paymentService.deletePaymentMethod(methodToDelete.value._id)
-    success('Metodo eliminado', 'El metodo de pago se elimino correctamente')
+    success('Método eliminado', 'El método de pago se eliminó correctamente')
     showDeleteModal.value = false
     methodToDelete.value = null
     loadMethods()
   } catch (err) {
-    console.error('Error al eliminar metodo de pago:', err)
-    showError('Error', err.message || 'No se pudo eliminar el metodo de pago')
+    showError('Error', err.message || 'No se pudo eliminar el método de pago')
   } finally {
     deleting.value = false
   }
