@@ -5,7 +5,7 @@
       <div>
         <h2 class="text-3xl font-bold text-gray-800">Órdenes</h2>
         <p v-if="!loading && !error" class="text-sm text-gray-500 mt-1">
-          {{ filteredOrders.length }} de {{ ordenes.length }} orden(es)
+          {{ filteredOrders.length }} orden(es) encontradas
         </p>
       </div>
       <button
@@ -19,19 +19,51 @@
       </button>
     </div>
 
-    <!-- Filtros y búsqueda -->
+    <!-- Filtros -->
     <div v-if="!loading && !error && ordenes.length > 0" class="space-y-3 mb-5">
-      <!-- Búsqueda -->
-      <div class="relative">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <input
-          v-model="search"
-          type="text"
-          placeholder="Buscar por N° orden o cliente..."
-          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
-        />
+      <!-- Búsqueda + Fechas -->
+      <div class="flex flex-wrap gap-3">
+        <!-- Búsqueda -->
+        <div class="relative flex-1 min-w-[200px]">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            v-model="search"
+            type="text"
+            placeholder="Buscar por N° orden o cliente..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
+          />
+        </div>
+
+        <!-- Desde -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-500 whitespace-nowrap">Desde:</label>
+          <input
+            v-model="filterDateFrom"
+            type="date"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
+          />
+        </div>
+
+        <!-- Hasta -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-500 whitespace-nowrap">Hasta:</label>
+          <input
+            v-model="filterDateTo"
+            type="date"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#a3195b] focus:border-transparent"
+          />
+        </div>
+
+        <!-- Limpiar fechas -->
+        <button
+          v-if="filterDateFrom || filterDateTo"
+          @click="filterDateFrom = ''; filterDateTo = ''"
+          class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+        >
+          Limpiar fechas
+        </button>
       </div>
 
       <!-- Filtro por estado -->
@@ -62,65 +94,123 @@
     <!-- Tabla -->
     <div v-else class="bg-white rounded-lg shadow-md overflow-hidden">
       <div v-if="filteredOrders.length === 0" class="text-center py-12 text-gray-500">
-        {{ ordenes.length === 0 ? 'No hay órdenes registradas' : 'No hay órdenes que coincidan con la búsqueda' }}
+        {{ ordenes.length === 0 ? 'No hay órdenes registradas' : 'No hay órdenes que coincidan con los filtros' }}
       </div>
 
-      <div v-else class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Orden</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr
-              v-for="orden in filteredOrders"
-              :key="orden._id"
-              class="hover:bg-gray-50 transition cursor-pointer"
-              @click="viewOrderDetails(orden)"
+      <div v-else>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Orden</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr
+                v-for="orden in paginatedOrders"
+                :key="orden._id"
+                class="hover:bg-gray-50 transition cursor-pointer"
+                @click="viewOrderDetails(orden)"
+              >
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-semibold text-gray-900">{{ orden.order_number || formatId(orden._id) }}</div>
+                  <div class="text-xs font-mono text-gray-400">{{ formatId(orden._id) }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{{ orden.userId?.fullName || 'N/A' }}</div>
+                  <div class="text-xs text-gray-500">{{ orden.userId?.email || '' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ orden.items?.length || 0 }} producto(s)
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  ${{ formatPrice(orden.total) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    :class="getStatusClass(orden.status)"
+                  >
+                    {{ getStatusLabel(orden.status) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ formatDate(orden.createdAt) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @click.stop>
+                  <button
+                    @click="viewOrderDetails(orden)"
+                    class="text-[#a3195b] hover:text-[#662482] transition"
+                  >
+                    Ver Detalles
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        <div class="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <!-- Info -->
+          <p class="text-sm text-gray-500">
+            Mostrando
+            <span class="font-medium text-gray-700">{{ pageStart }}</span>
+            –
+            <span class="font-medium text-gray-700">{{ pageEnd }}</span>
+            de
+            <span class="font-medium text-gray-700">{{ filteredOrders.length }}</span>
+            órdenes
+          </p>
+
+          <!-- Controles -->
+          <div class="flex items-center gap-1">
+            <!-- Anterior -->
+            <button
+              @click="currentPage--"
+              :disabled="currentPage === 1"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+              :class="currentPage === 1
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'text-gray-600 hover:bg-gray-100'"
             >
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-semibold text-gray-900">{{ orden.order_number || formatId(orden._id) }}</div>
-                <div class="text-xs font-mono text-gray-400">{{ formatId(orden._id) }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ orden.userId?.fullName || 'N/A' }}</div>
-                <div class="text-xs text-gray-500">{{ orden.userId?.email || '' }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ orden.items?.length || 0 }} producto(s)
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                ${{ formatPrice(orden.total) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="getStatusClass(orden.status)"
-                >
-                  {{ getStatusLabel(orden.status) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(orden.createdAt) }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" @click.stop>
-                <button
-                  @click="viewOrderDetails(orden)"
-                  class="text-[#a3195b] hover:text-[#662482] transition"
-                >
-                  Ver Detalles
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              ‹ Ant.
+            </button>
+
+            <!-- Números de página -->
+            <template v-for="page in pageNumbers" :key="page">
+              <span v-if="page === '...'" class="px-2 py-1.5 text-gray-400 text-sm">…</span>
+              <button
+                v-else
+                @click="currentPage = page"
+                class="w-8 h-8 rounded-lg text-sm font-medium transition"
+                :class="currentPage === page
+                  ? 'bg-gradient-to-r from-[#a3195b] to-[#662482] text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100'"
+              >
+                {{ page }}
+              </button>
+            </template>
+
+            <!-- Siguiente -->
+            <button
+              @click="currentPage++"
+              :disabled="currentPage === totalPages"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+              :class="currentPage === totalPages
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'text-gray-600 hover:bg-gray-100'"
+            >
+              Sig. ›
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -226,13 +316,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import Modal from '../../components/common/Modal.vue'
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import orderService from '../../services/orderService.js'
 import { useToast } from '../../composables/useToast.js'
 
 const { error: showError } = useToast()
+
+const PAGE_SIZE = 15
 
 // Estado
 const ordenes = ref([])
@@ -241,18 +333,26 @@ const error = ref(null)
 const selectedOrder = ref(null)
 const search = ref('')
 const filterStatus = ref('')
+const filterDateFrom = ref('')
+const filterDateTo = ref('')
+const currentPage = ref(1)
 
-// Opciones de filtro con conteos dinámicos
+// Resetear página al cambiar cualquier filtro
+watch([search, filterStatus, filterDateFrom, filterDateTo], () => {
+  currentPage.value = 1
+})
+
+// Opciones de filtro por estado (solo muestra los que tienen órdenes)
 const statusFilterOptions = computed(() => [
   { value: '', label: 'Todas', count: ordenes.value.length },
-  { value: 'pending',   label: 'Pendientes', count: ordenes.value.filter(o => o.status === 'pending').length },
-  { value: 'paid',      label: 'Pagadas',    count: ordenes.value.filter(o => o.status === 'paid').length },
-  { value: 'shipped',   label: 'Enviadas',   count: ordenes.value.filter(o => o.status === 'shipped').length },
-  { value: 'completed', label: 'Completadas',count: ordenes.value.filter(o => o.status === 'completed').length },
-  { value: 'canceled',  label: 'Canceladas', count: ordenes.value.filter(o => o.status === 'canceled').length },
+  { value: 'pending',   label: 'Pendientes',  count: ordenes.value.filter(o => o.status === 'pending').length },
+  { value: 'paid',      label: 'Pagadas',     count: ordenes.value.filter(o => o.status === 'paid').length },
+  { value: 'shipped',   label: 'Enviadas',    count: ordenes.value.filter(o => o.status === 'shipped').length },
+  { value: 'completed', label: 'Completadas', count: ordenes.value.filter(o => o.status === 'completed').length },
+  { value: 'canceled',  label: 'Canceladas',  count: ordenes.value.filter(o => o.status === 'canceled').length },
 ].filter(opt => opt.value === '' || opt.count > 0))
 
-// Órdenes filtradas por estado + búsqueda
+// Órdenes filtradas (estado + búsqueda + fechas), ya ordenadas de más reciente a más antigua
 const filteredOrders = computed(() => {
   let result = ordenes.value
 
@@ -269,16 +369,56 @@ const filteredOrders = computed(() => {
     )
   }
 
+  if (filterDateFrom.value) {
+    const from = new Date(filterDateFrom.value)
+    from.setHours(0, 0, 0, 0)
+    result = result.filter(o => new Date(o.createdAt) >= from)
+  }
+
+  if (filterDateTo.value) {
+    const to = new Date(filterDateTo.value)
+    to.setHours(23, 59, 59, 999)
+    result = result.filter(o => new Date(o.createdAt) <= to)
+  }
+
   return result
 })
 
-// Cargar órdenes
+// Paginación
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredOrders.value.length / PAGE_SIZE)))
+const pageStart = computed(() => filteredOrders.value.length === 0 ? 0 : (currentPage.value - 1) * PAGE_SIZE + 1)
+const pageEnd  = computed(() => Math.min(currentPage.value * PAGE_SIZE, filteredOrders.value.length))
+
+const paginatedOrders = computed(() =>
+  filteredOrders.value.slice((currentPage.value - 1) * PAGE_SIZE, currentPage.value * PAGE_SIZE)
+)
+
+// Números de página con elipsis: siempre muestra primera, última y vecinas de la actual
+const pageNumbers = computed(() => {
+  const total = totalPages.value
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+
+  const pages = new Set([1, total, currentPage.value])
+  if (currentPage.value > 1) pages.add(currentPage.value - 1)
+  if (currentPage.value < total) pages.add(currentPage.value + 1)
+
+  const sorted = [...pages].sort((a, b) => a - b)
+  const result = []
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && sorted[i] - sorted[i - 1] > 1) result.push('...')
+    result.push(sorted[i])
+  }
+  return result
+})
+
+// Cargar órdenes — ordenadas de más reciente a más antigua
 const loadOrders = async () => {
   loading.value = true
   error.value = null
   try {
     const response = await orderService.listAll()
-    ordenes.value = response.data || []
+    const data = response.data || []
+    ordenes.value = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   } catch (err) {
     console.error('Error al cargar órdenes:', err)
     error.value = err.message || 'Error al cargar las órdenes'
@@ -297,9 +437,7 @@ const formatId = (id) => {
   return String(id).substring(0, 8).toUpperCase()
 }
 
-const formatPrice = (price) => {
-  return Number(price || 0).toFixed(2)
-}
+const formatPrice = (price) => Number(price || 0).toFixed(2)
 
 const formatDate = (date) => {
   if (!date) return 'N/A'
