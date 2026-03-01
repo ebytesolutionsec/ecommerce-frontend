@@ -47,6 +47,12 @@ export const paymentService = {
     return api.delete(`/payment/method/${methodId}`)
   },
 
+  // Enviar comprobante de transferencia bancaria (multipart/form-data)
+  // formData debe incluir: payment_method, amount, number_comprobante, proof_image (archivo)
+  sendComprobante: async (orderId, formData) => {
+    return api.postFormData(`/payment/send/comprobante/${orderId}`, formData)
+  },
+
   // ============================================
   // PAYPHONE - Pasarela de Pago
   // ============================================

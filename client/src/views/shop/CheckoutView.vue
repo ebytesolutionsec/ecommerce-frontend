@@ -644,21 +644,18 @@ const handlePlaceOrder = async () => {
       return // No continuar, el usuario será redirigido
 
     } else if (selectedMethod.provider === 'bank transfer') {
-      // Transferencia bancaria
-      const paymentData = {
-        payment_method_id: paymentMethod.value,
-        transaction_id: transferInfo.value.referenceNumber,
-        provider_response: {
-          method: 'transfer',
-          shipping: shippingInfo.value
-        }
-      }
+      // Transferencia bancaria: enviar comprobante como multipart/form-data
+      const formData = new FormData()
+      formData.append('payment_method', paymentMethod.value)
+      formData.append('amount', cartTotal.value)
+      formData.append('number_comprobante', transferInfo.value.referenceNumber)
+      formData.append('proof_image', transferInfo.value.receiptFile)
 
-      await paymentService.createPayment(orderId, paymentData)
+      await paymentService.sendComprobante(orderId, formData)
 
       // 3. Limpiar carrito y redirigir
       clearCart()
-      success('¡Pedido realizado!', 'Tu pedido ha sido procesado exitosamente')
+      success('¡Comprobante enviado!', 'Tu pago está en espera de validación por el equipo')
 
       setTimeout(() => {
         router.push('/mis-ordenes')
