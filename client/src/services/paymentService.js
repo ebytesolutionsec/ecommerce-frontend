@@ -53,6 +53,11 @@ export const paymentService = {
     return api.postFormData(`/payment/send/comprobante/${orderId}`, formData)
   },
 
+  // Aprobar pago de transferencia bancaria (Admin)
+  approvePayment: async (paymentId) => {
+    return api.post(`/payment/aproved/${paymentId}`)
+  },
+
   // ============================================
   // PAYPHONE - Pasarela de Pago
   // ============================================
