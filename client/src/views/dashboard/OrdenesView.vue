@@ -324,7 +324,7 @@ import { useToast } from '../../composables/useToast.js'
 
 const { error: showError } = useToast()
 
-const PAGE_SIZE = 15
+const PAGE_SIZE = 10
 
 // Estado
 const ordenes = ref([])
